@@ -1,0 +1,543 @@
+{
+	"info": {
+		"_postman_id": "clinic-system-v1-full-collection",
+		"name": "Clinic Management System API - Complete",
+		"description": "Full Postman Collection for Clinic Management System covering all endpoints, RBAC roles, appointments, medical records, schedules, and payments.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "service_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "doctor_id",
+			"value": "2",
+			"type": "string"
+		},
+		{
+			"key": "appointment_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "payment_id",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication & Profile",
+			"item": [
+				{
+					"name": "Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data) {",
+									"    if (jsonData.data.token) { pm.collectionVariables.set(\"token\", jsonData.data.token); }",
+									"    if (jsonData.data.user && jsonData.data.user.id) { pm.collectionVariables.set(\"user_id\", jsonData.data.user.id); }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@clinic.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
+					}
+				},
+				{
+					"name": "Login - Doctor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data) {",
+									"    if (jsonData.data.token) { pm.collectionVariables.set(\"token\", jsonData.data.token); }",
+									"    if (jsonData.data.user && jsonData.data.user.id) { pm.collectionVariables.set(\"user_id\", jsonData.data.user.id); }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"doctor@clinic.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
+					}
+				},
+				{
+					"name": "Login - Patient",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data) {",
+									"    if (jsonData.data.token) { pm.collectionVariables.set(\"token\", jsonData.data.token); }",
+									"    if (jsonData.data.user && jsonData.data.user.id) { pm.collectionVariables.set(\"user_id\", jsonData.data.user.id); }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"patient@clinic.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"]}
+					}
+				},
+				{
+					"name": "Register Patient",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.token) { pm.collectionVariables.set(\"token\", jsonData.data.token); }"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"آيه\",\n    \"last_name\": \"برغوث\",\n    \"email\": \"aya.test@clinic.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/register", "host": ["{{base_url}}"], "path": ["register"]}
+					}
+				},
+				{
+					"name": "Get Authenticated User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/user", "host": ["{{base_url}}"], "path": ["user"]}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/logout", "host": ["{{base_url}}"], "path": ["logout"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Services Management",
+			"item": [
+				{
+					"name": "Get All Services (Public)",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Accept", "value": "application/json"}],
+						"url": {"raw": "{{base_url}}/services", "host": ["{{base_url}}"], "path": ["services"]}
+					}
+				},
+				{
+					"name": "Create Service (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"تبييض أسنان بالليزر\",\n    \"description\": \"إزالة البقع والتبييض الفعال باستخدام تقنية الليزر\",\n    \"price\": 500.00,\n    \"duration_minutes\": 60,\n    \"is_active\": true\n}"
+						},
+						"url": {"raw": "{{base_url}}/services", "host": ["{{base_url}}"], "path": ["services"]}
+					}
+				},
+				{
+					"name": "Update Service (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"تبييض أسنان مدمج\",\n    \"description\": \"تعديل الوصف والسعر\",\n    \"price\": 450.00,\n    \"duration_minutes\": 45,\n    \"is_active\": true\n}"
+						},
+						"url": {"raw": "{{base_url}}/services/{{service_id}}", "host": ["{{base_url}}"], "path": ["services", "{{service_id}}"]}
+					}
+				},
+				{
+					"name": "Delete Service (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/services/{{service_id}}", "host": ["{{base_url}}"], "path": ["services", "{{service_id}}"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Doctor Schedules & Leaves",
+			"item": [
+				{
+					"name": "Get Doctor Schedules",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/doctor-schedules", "host": ["{{base_url}}"], "path": ["doctor-schedules"]}
+					}
+				},
+				{
+					"name": "Create Schedule (Doctor/Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"doctor_id\": {{doctor_id}},\n    \"day_of_week\": \"Sunday\",\n    \"start_time\": \"09:00\",\n    \"end_time\": \"15:00\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/doctor-schedules", "host": ["{{base_url}}"], "path": ["doctor-schedules"]}
+					}
+				},
+				{
+					"name": "Get Doctor Leaves",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/doctor-leaves", "host": ["{{base_url}}"], "path": ["doctor-leaves"]}
+					}
+				},
+				{
+					"name": "Create Doctor Leave",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"doctor_id\": {{doctor_id}},\n    \"leave_date\": \"2026-11-15\",\n    \"reason\": \"إجازة سنوية\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/doctor-leaves", "host": ["{{base_url}}"], "path": ["doctor-leaves"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Appointments Management",
+			"item": [
+				{
+					"name": "Get Appointments List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/appointments", "host": ["{{base_url}}"], "path": ["appointments"]}
+					}
+				},
+				{
+					"name": "Book New Appointment (Patient)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"doctor_id\": {{doctor_id}},\n    \"service_id\": {{service_id}},\n    \"appointment_date\": \"2026-10-25\",\n    \"appointment_time\": \"10:30\",\n    \"notes\": \"أعاني من ألم في الضرس العلوي\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/appointments", "host": ["{{base_url}}"], "path": ["appointments"]}
+					}
+				},
+				{
+					"name": "Update Appointment Status (Doctor/Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"confirmed\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/appointments/{{appointment_id}}/status", "host": ["{{base_url}}"], "path": ["appointments", "{{appointment_id}}", "status"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Medical Records",
+			"item": [
+				{
+					"name": "Get Medical Records",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/medical-records", "host": ["{{base_url}}"], "path": ["medical-records"]}
+					}
+				},
+				{
+					"name": "Create Medical Record (Doctor)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"appointment_id\": {{appointment_id}},\n    \"patient_id\": 3,\n    \"diagnosis\": \"تسوس حاد في السن رقم 4\",\n    \"treatment_plan\": \"حشو عصب وتلبيس السن\",\n    \"prescription\": \"مُسكن بروفين عند الحاجة + مضاد حيوي 500mg\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/medical-records", "host": ["{{base_url}}"], "path": ["medical-records"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Payments Management",
+			"item": [
+				{
+					"name": "Get Payments List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"]}
+					}
+				},
+				{
+					"name": "Create Payment Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"appointment_id\": {{appointment_id}},\n    \"amount\": 150.00,\n    \"payment_method\": \"cash\",\n    \"status\": \"paid\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"]}
+					}
+				},
+				{
+					"name": "Update Payment Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"paid\"\n}"
+						},
+						"url": {"raw": "{{base_url}}/payments/{{payment_id}}/status", "host": ["{{base_url}}"], "path": ["payments", "{{payment_id}}", "status"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. User Administration (Admin Only)",
+			"item": [
+				{
+					"name": "Delete User by ID (Soft Delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": {"raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["users", "{{user_id}}"]}
+					}
+				}
+			]
+		},
+        {
+	"name": "8. Doctor Services & Specialization",
+	"item": [
+		{
+			"name": "Assign Services to Doctor",
+			"request": {
+				"method": "POST",
+				"header": [
+					{"key": "Accept", "value": "application/json"},
+					{"key": "Content-Type", "value": "application/json"},
+					{"key": "Authorization", "value": "Bearer {{token}}"}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"services\": [\n        {\n            \"service_id\": 1,\n            \"custom_price\": 120.00\n        },\n        {\n            \"service_id\": 2,\n            \"custom_price\": null\n        }\n    ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/doctors/{{doctor_id}}/services",
+					"host": ["{{base_url}}"],
+					"path": ["doctors", "{{doctor_id}}", "services"]
+				}
+			}
+		},
+		{
+			"name": "Get Doctors by Service ID (For Patients)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{"key": "Accept", "value": "application/json"}
+				],
+				"url": {
+					"raw": "{{base_url}}/services/{{service_id}}/doctors",
+					"host": ["{{base_url}}"],
+					"path": ["services", "{{service_id}}", "doctors"]
+				}
+			}
+		},
+		{
+			"name": "Get Services of Specific Doctor",
+			"request": {
+				"method": "GET",
+				"header": [
+					{"key": "Accept", "value": "application/json"}
+				],
+				"url": {
+					"raw": "{{base_url}}/doctors/{{doctor_id}}/services",
+					"host": ["{{base_url}}"],
+					"path": ["doctors", "{{doctor_id}}", "services"]
+				}
+			}
+		},
+		{
+			"name": "Detach Service from Doctor",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{"key": "Accept", "value": "application/json"},
+					{"key": "Authorization", "value": "Bearer {{token}}"}
+				],
+				"url": {
+					"raw": "{{base_url}}/doctors/{{doctor_id}}/services/{{service_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["doctors", "{{doctor_id}}", "services", "{{service_id}}"]
+				}
+			}
+		}
+	]
+},
+        {
+            "name": "9. Doctor Schedule Bulk Management",
+            "item": [
+                {
+                    "name": "Bulk Create/Update Doctor Schedules",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {"key": "Accept", "value": "application/json"},
+                            {"key": "Content-Type", "value": "application/json"},
+                            {"key": "Authorization", "value": "Bearer {{token}}"}
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"doctor_id\": {{doctor_id}},\n    \"schedules\": [\n        {\n            \"day_of_week\": 0,\n            \"start_time\": \"09:00\",\n            \"end_time\": \"15:00\",\n            \"is_working_day\": true\n        },\n        {\n            \"day_of_week\": 1,\n            \"start_time\": \"10:00\",\n            \"end_time\": \"16:00\",\n            \"is_working_day\": true\n        }\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/doctor-schedules/bulk",
+                            "host": ["{{base_url}}"],
+                            "path": ["doctor-schedules", "bulk"]
+                        }
+                    }
+                }
+            ]
+        }
+	]
+}
