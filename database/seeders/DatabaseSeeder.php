@@ -34,7 +34,17 @@ class DatabaseSeeder extends Seeder
         ]);
         $doctor->assignRole('doctor');
 
-        // 4. إنشاء حساب Patient
+        // 4. إنشاء حساب Receptionist (موظف الاستقبال)
+        $receptionist = User::create([
+            'first_name' => 'Mona',
+            'last_name'  => 'Omar',
+            'email'      => 'reception@clinic.com',
+            'phone'      => '0955555555',
+            'password'   => Hash::make('password123'),
+        ]);
+        $receptionist->assignRole('receptionist');
+
+        // 5. إنشاء حساب Patient
         $patient = User::create([
             'first_name' => 'Sara',
             'last_name'  => 'Khalid',
@@ -44,7 +54,7 @@ class DatabaseSeeder extends Seeder
         ]);
         $patient->assignRole('patient');
 
-        // 5. إنشاء خدمات طبية
+        // 6. إنشاء خدمات طبية
         $service1 = Service::create([
             'name'             => 'كشف عام',
             'description'      => 'معاينة وتشخيص مبدئي للحالة الطبية',
@@ -61,7 +71,7 @@ class DatabaseSeeder extends Seeder
             'is_active'        => true,
         ]);
 
-        // 6. ربط الطبيب بالخدمات مع سعر مخصص (Custom Price)
+        // 7. ربط الطبيب بالخدمات مع سعر مخصص (Custom Price)
         $doctor->services()->attach([
             $service1->id => ['custom_price' => 120.00], // سعر مخصص للطبيب للكشف العام
             $service2->id => ['custom_price' => null],   // يعتمد السعر الافتراضي للخدمة (250.00)

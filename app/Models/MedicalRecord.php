@@ -27,7 +27,7 @@ class MedicalRecord extends Model
 
     public function doctor()
     {
-        return $this->belongsTo(User::class, 'doctor_id');
+        return $this->belongsTo(User::class, 'doctor_id')->withTrashed();
     }
 
     public function appointment()

@@ -4,13 +4,15 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\MedicalRecordRequest;
+use App\Models\MedicalRecord;
 use App\Services\MedicalRecordService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class MedicalRecordController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, AuthorizesRequests;
 
     protected MedicalRecordService $medicalRecordService;
 
@@ -27,6 +29,9 @@ class MedicalRecordController extends Controller
 
     public function store(MedicalRecordRequest $request)
     {
+
+        $this->authorize('create', MedicalRecord::class);
+
         $record = $this->medicalRecordService->storeRecord($request->validated(), $request->user()->id);
         return $this->successResponse($record, 'تم إنشاء السجل الطبي بنجاح', 201);
     }

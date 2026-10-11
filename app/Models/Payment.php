@@ -10,15 +10,26 @@ class Payment extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['appointment_id', 'patient_id', 'amount', 'discount', 'final_amount', 'payment_method', 'status'];
+    protected $fillable = [
+        'invoice_id',
+        'amount',
+        'payment_method',
+        'collected_by',
+    ];
 
-    public function appointment()
+    public function invoice()
     {
-        return $this->belongsTo(Appointment::class);
+        return $this->belongsTo(Invoice::class);
     }
 
-    public function patient()
+    public function collector()
     {
-        return $this->belongsTo(User::class, 'patient_id');
+        return $this->belongsTo(User::class, 'collected_by');
+    }
+
+    // للوصول للموعد والمريض مباشرة بكل سهولة عبر الفاتورة:
+    public function appointment()
+    {
+        return $this->hasOneThrough(Appointment::class, Invoice::class, 'id', 'id', 'invoice_id', 'appointment_id');
     }
 }

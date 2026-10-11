@@ -16,6 +16,7 @@ class Appointment extends Model
         'patient_id',
         'doctor_id',
         'service_id',
+        'invoice_id',
         'appointment_date',
         'start_time',
         'status',
@@ -53,5 +54,15 @@ class Appointment extends Model
     public function medicalRecord()
     {
         return $this->hasOne(MedicalRecord::class);
+    }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
+    public function collector()
+    {
+        return $this->belongsTo(User::class, 'collected_by');
     }
 }

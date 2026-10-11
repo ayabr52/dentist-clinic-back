@@ -7,10 +7,14 @@ use App\Http\Requests\Api\V1\StorePaymentRequest;
 use App\Http\Requests\Api\V1\UpdatePaymentStatusRequest;
 use App\Models\Payment;
 use App\Services\PaymentService;
+use App\Traits\ApiResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
+    use ApiResponse, AuthorizesRequests;
+
     protected PaymentService $paymentService;
 
     public function __construct(PaymentService $paymentService)
@@ -21,75 +25,97 @@ class PaymentController extends Controller
     /**
      * Display a listing of the payments.
      *
-     * This method retrieves a list of payments, optionally filtered by patient ID and status.
-     *
-     * @param \Illuminate\Http\Request $request The incoming request containing optional filters.
-     *
-     * @return \Illuminate\Http\JsonResponse A JSON response containing the status and the list of payments.
-     *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the specified patient ID does not exist.
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
+        $user = $request->user();
         $query = Payment::with(['appointment', 'patient']);
 
-        if ($request->has('patient_id')) {
-            $query->where('patient_id', $request->patient_id);
+        // إذا كان المستخدم مريضاً، جلب فواتيره الخاصة حصراً بناءً على دوره
+        if ($user->hasRole('patient')) {
+            $query->where('patient_id', $user->id);
+        } else {
+            // للأدمن أو الطبيب: السماح بالفلترة حسب الـ patient_id إن وجد
+            if ($request->has('patient_id')) {
+                $query->where('patient_id', $request->patient_id);
+            }
         }
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $query->get()
-        ]);
+        $payments = $query->get();
+
+        return $this->successResponse($payments, 'تم جلب الدفعات المالية بنجاح');
     }
 
-    
-
+    /**
+     * Store a newly created payment in storage.
+     *
+     * @param StorePaymentRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(StorePaymentRequest $request)
     {
+        // التحقق من الصلاحية (مثلاً للأدمن فقط أو الموظف المخول)
+        // $this->authorize('create', Payment::class);
+
         $payment = $this->paymentService->createPayment($request->validated());
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم إنشاء عملية الدفع بنجاح',
-            'data' => $payment
-        ], 201);
+        return $this->successResponse($payment, 'تم إنشاء عملية الدفع بنجاح', 201);
     }
 
+    /**
+     * Display the specified payment.
+     *
+     * @param Payment $payment
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Payment $payment)
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => $payment->load(['appointment', 'patient'])
-        ]);
+        // $this->authorize('view', $payment);
+
+        return $this->successResponse(
+            $payment->load(['appointment', 'patient']),
+            'تم جلب تفاصيل الدفع بنجاح'
+        );
     }
 
+    /**
+     * Update the specified payment status.
+     *
+     * @param UpdatePaymentStatusRequest $request
+     * @param Payment $payment
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function updateStatus(UpdatePaymentStatusRequest $request, Payment $payment)
     {
+        // $this->authorize('update', $payment);
+
         $updatedPayment = $this->paymentService->updateStatus(
             $payment,
             $request->validated()['status'],
             $request->validated()['payment_method'] ?? null
         );
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم تحديث حالة الدفع بنجاح',
-            'data' => $updatedPayment
-        ]);
+        return $this->successResponse($updatedPayment, 'تم تحديث حالة الدفع بنجاح');
     }
 
+    /**
+     * Remove the specified payment from storage.
+     *
+     * @param Payment $payment
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy(Payment $payment)
     {
+        // $this->authorize('delete', $payment);
+
         $payment->delete(); // Soft Delete
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم حذف السجل المالي بنجاح'
-        ]);
+        return $this->successResponse(null, 'تم حذف السجل المالي بنجاح');
     }
 }

@@ -9,7 +9,12 @@ class DoctorSchedule extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['doctor_id', 'day_of_week', 'start_time', 'end_time', 'is_working_day'];
+    protected $fillable =
+    ['doctor_id',
+    'day_of_week',
+    'start_time',
+     'end_time',
+     'is_working_day'];
 
     public function doctor()
     {

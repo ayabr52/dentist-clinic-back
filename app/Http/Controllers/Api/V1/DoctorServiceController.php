@@ -9,6 +9,22 @@ use Illuminate\Http\Request;
 
 class DoctorServiceController extends Controller
 {
+
+    /**
+     * جلب قائمة جميع الأطباء في العيادة مع تخصصاتهم
+     */
+    public function index()
+    {
+        $doctors = User::role('doctor')
+            ->select('id', 'first_name', 'last_name', 'email', 'specialization')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $doctors
+        ]);
+    }
+
     /**
      * ربط طبيب بخدمة واحدة أو عدة خدمات مع سعر مخصص (Custom Price)
      */
