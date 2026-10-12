@@ -26,10 +26,4 @@ class Payment extends Model
     {
         return $this->belongsTo(User::class, 'collected_by');
     }
-
-    // للوصول للموعد والمريض مباشرة بكل سهولة عبر الفاتورة:
-    public function appointment()
-    {
-        return $this->hasOneThrough(Appointment::class, Invoice::class, 'id', 'id', 'invoice_id', 'appointment_id');
-    }
 }

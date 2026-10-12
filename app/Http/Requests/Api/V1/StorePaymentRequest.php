@@ -14,7 +14,7 @@ class StorePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'invoice_id'     => 'required|exists:invoices,id',
+            'appointment_id'     => 'required|exists:appointments,id',
             'amount'         => 'required|numeric|min:0.01',
             'payment_method' => 'nullable|string|in:cash,card,insurance,online',
         ];

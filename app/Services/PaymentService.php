@@ -18,7 +18,8 @@ class PaymentService
      * creates the payment record, and automatically updates the invoice's paid amount and status.
      *
      * @param array{
-     *     invoice_id: int,
+     *     invoice_id?: int,
+     *     appointment_id?: int,
      *     amount: float,
      *     payment_method?: string
      * } $data The validated payment request data.
@@ -32,10 +33,28 @@ class PaymentService
     public function createPayment(array $data): Payment
     {
         return DB::transaction(function () use ($data) {
+
+            // إذا تم إرسال appointment_id، نستخرج الـ invoice_id المرتبط به تلقائياً
+            if (isset($data['appointment_id'])) {
+                $appointment = \App\Models\Appointment::with('invoice')->findOrFail($data['appointment_id']);
+
+                if (!$appointment->invoice_id || !$appointment->invoice) {
+                    throw ValidationException::withMessages([
+                        'appointment_id' => ['هذا الموعد غير مرتبط بفاتورة مالية بعد.']
+                    ]);
+                }
+
+                $invoiceId = $appointment->invoice_id;
+            } else {
+                $invoiceId = $data['invoice_id'];
+            }
+
             /** @var Invoice $invoice */
-            $invoice = Invoice::findOrFail($data['invoice_id']);
+            $invoice = Invoice::findOrFail($invoiceId);
 
             $amountPaid = (float) $data['amount'];
+
+            // التصحيح هنا: حساب المبلغ المتبقي بشكل صحيح
             $remainingAmount = (float) $invoice->final_amount - (float) $invoice->paid_amount;
 
             // Validate that the payment amount does not exceed the remaining balance
@@ -74,14 +93,36 @@ class PaymentService
     /**
      * Retrieve a specific payment record along with its related details.
      *
-     * @param int $paymentId The ID of the payment record.
+     * This method fetches a payment instance by its ID and includes related models such as
+     * the associated invoice, patient, appointments, and collector.
+     *
+     * @param int $paymentId The ID of the payment record to retrieve.
      *
      * @return \App\Models\Payment The payment instance with loaded relations.
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the payment is not found.
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the payment with the given ID is not found.
      */
     public function getPaymentDetails(int $paymentId): Payment
     {
-        return Payment::with(['invoice', 'patient', 'collector'])->findOrFail($paymentId);
+        // استخدام العلاقة appointments (بالجمع) المطابقة لملف Invoice.php
+        return Payment::with(['invoice.patient', 'invoice.appointments', 'collector'])->findOrFail($paymentId);
+    }
+
+    /**
+     * Retrieve a list of payments associated with a specific invoice.
+     *
+     * This method queries the Payment model to fetch all payments that are linked
+     * to the provided invoice ID. The results are ordered by the creation date in
+     * descending order and include the associated collector information.
+     *
+     * @param int $invoiceId The ID of the invoice for which to retrieve payments.
+     * @return \Illuminate\Database\Eloquent\Collection A collection of Payment models.
+     */
+    public function getInvoicePayments(int $invoiceId)
+    {
+        return Payment::where('invoice_id', $invoiceId)
+            ->with(['collector'])
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 }

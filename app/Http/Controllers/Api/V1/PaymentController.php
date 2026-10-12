@@ -31,7 +31,7 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = Payment::with(['appointment', 'patient']);
+        $query = Payment::with(['invoice.appointments', 'invoice.patient', 'collector']);
 
         // إذا كان المستخدم مريضاً، جلب فواتيره الخاصة حصراً بناءً على دوره
         if ($user->hasRole('patient')) {
@@ -79,7 +79,7 @@ class PaymentController extends Controller
         // $this->authorize('view', $payment);
 
         return $this->successResponse(
-            $payment->load(['appointment', 'patient']),
+            $payment->load(['invoice.appointments', 'invoice.patient', 'collector']),
             'تم جلب تفاصيل الدفع بنجاح'
         );
     }
