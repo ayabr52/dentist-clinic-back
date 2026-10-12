@@ -10,26 +10,21 @@ use Throwable;
 
 class PaymentService
 {
+
     /**
-     * Create a new partial or full payment transaction for an invoice.
+     * Create a new payment record for an invoice.
      *
-     * This method runs within a database transaction to ensure financial data integrity.
-     * It validates that the paid amount does not exceed the remaining balance,
-     * creates the payment record, and automatically updates the invoice's paid amount and status.
+     * This method handles the creation of a payment, validates that the amount does not exceed
+     * the remaining balance on the invoice, and updates the invoice's paid amount and status.
+     * It uses DB::transaction to ensure data consistency and lockForUpdate on the invoice
+     * to prevent race conditions when multiple payments are attempted simultaneously.
      *
-     * @param array{
-     *     invoice_id?: int,
-     *     appointment_id?: int,
-     *     amount: float,
-     *     payment_method?: string
-     * } $data The validated payment request data.
-     *
-     * @return \App\Models\Payment The newly created payment instance.
-     *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the invoice is not found.
-     * @throws \Illuminate\Validation\ValidationException If the paid amount exceeds the remaining balance.
-     * @throws \Throwable If any database operation fails.
+     * @param array $data The payment data including appointment_id (optional), invoice_id, amount, and payment_method.
+     * @return Payment The created Payment record, loaded with invoice and collector relationships.
+     * @throws ValidationException If appointment_id is invalid or amount exceeds remaining balance.
+     * @throws \Exception If database transaction fails or invoice not found.
      */
+
     public function createPayment(array $data): Payment
     {
         return DB::transaction(function () use ($data) {
@@ -49,12 +44,15 @@ class PaymentService
                 $invoiceId = $data['invoice_id'];
             }
 
-            /** @var Invoice $invoice */
-            $invoice = Invoice::findOrFail($invoiceId);
+            /**
+             * التعديل الجوهري هنا:
+             * 1. استخدام lockForUpdate() لمنع الـ Race Condition في حال تم إرسال دفعتين بنفس اللحظة.
+             */
+            $invoice = Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail();
 
             $amountPaid = (float) $data['amount'];
 
-            // التصحيح هنا: حساب المبلغ المتبقي بشكل صحيح
+            // التصحيح هنا: حساب المبلغ المتبقي بشكل صحيح (final_amount - paid_amount)
             $remainingAmount = (float) $invoice->final_amount - (float) $invoice->paid_amount;
 
             // Validate that the payment amount does not exceed the remaining balance
@@ -64,7 +62,7 @@ class PaymentService
                 ]);
             }
 
-            // Create the payment record
+        // Create the payment record
             /** @var Payment $payment */
             $payment = Payment::create([
                 'invoice_id'     => $invoice->id,
@@ -86,7 +84,7 @@ class PaymentService
 
             $invoice->save();
 
-            return $payment;
+            return $payment->load(['invoice.patient', 'collector']);
         });
     }
 

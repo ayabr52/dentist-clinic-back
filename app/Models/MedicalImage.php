@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory as FactoriesHasFactory;
 use Illuminate\Database\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class MedicalImage extends Model
 {
-    use HasFactory;
+    use FactoriesHasFactory;
 
     protected $fillable = [
         'medical_record_id',

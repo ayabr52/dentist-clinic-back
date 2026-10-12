@@ -5,9 +5,10 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Models\DoctorSchedule;
 use App\Models\Invoice;
-use App\Models\Service; // تأكد من استيراد موديل الخدمات إذا كنت تحسب السعر منه
+use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class AppointmentService
 {
@@ -24,61 +25,77 @@ class AppointmentService
 
     public function bookAppointment(array $data, int $patientId): Appointment
     {
-        $startTime = date('H:i', strtotime($data['start_time']));
         $appointmentDate = $data['appointment_date'];
+        $startTimeString = $data['start_time']; // مثال: "10:00"
         $doctorId = $data['doctor_id'];
+        $serviceId = $data['service_id'];
 
-        // 1. التحقق المباشر من جدول الإجازات
-        $isLeave = DB::table('doctor_leaves')
-            ->where('doctor_id', $doctorId)
-            ->whereDate('start_date', '<=', $appointmentDate)
-            ->whereDate('end_date', '>=', $appointmentDate)
-            ->exists();
+        // 1. جلب الخدمة لتحديد مدتها وسعرها
+        $service = Service::findOrFail($serviceId);
+        $durationMinutes = $service->duration ?? 30; // مدة الجلسة بالدقائق (افتراضي 30 دقيقة إذا لم تكن محددة)
+        $servicePrice = $service->price ?? 0.00;
 
-        if ($isLeave) {
-            throw new \InvalidArgumentException('عذراً، الطبيب في إجازة في هذا التاريخ.');
-        }
+        // حساب وقت البداية والنهاية باستخدام Carbon
+        $startTime = Carbon::parse("$appointmentDate $startTimeString");
+        $endTime = $startTime->copy()->addMinutes($durationMinutes);
 
-        // 2. معرفة رقم اليوم في الأسبوع (0 = الأحد، 1 = الإثنين، إلخ)
-        $dayOfWeek = Carbon::parse($appointmentDate)->dayOfWeek;
+        // نبدأ الـ Transaction والقفل لمنع التسابق (Race Conditions)
+        return DB::transaction(function () use ($doctorId, $appointmentDate, $startTime, $endTime, $startTimeString, $patientId, $servicePrice, $serviceId, $data) {
 
-        // 3. التحقق من ساعات الدوام لهذا اليوم
-        $schedule = DoctorSchedule::where('doctor_id', $doctorId)
-            ->where('day_of_week', $dayOfWeek)
-            ->where('is_working_day', true)
-            ->where('start_time', '<=', $startTime)
-            ->where('end_time', '>=', $startTime)
-            ->exists();
+            // أ. التحقق من جدول الإجازات (مع قفل الصفوف المرتبطة إن أمكن أو التحقق الآمن)
+            $isLeave = DB::table('doctor_leaves')
+                ->where('doctor_id', $doctorId)
+                ->whereDate('start_date', '<=', $appointmentDate)
+                ->whereDate('end_date', '>=', $appointmentDate)
+                ->exists();
 
-        if (!$schedule) {
-            throw new \InvalidArgumentException('عذراً، هذا الوقت خارج ساعات دوام الطبيب أو أن الطبيب لا يعمل في هذا اليوم.');
-        }
+            if ($isLeave) {
+                throw ValidationException::withMessages([
+                    'appointment_date' => ['عذراً، الطبيب في إجازة في هذا التاريخ.']
+                ]);
+            }
 
-        // 4. التحقق هل الموعد محجوز مسبقاً
-        $isBooked = Appointment::where('doctor_id', $doctorId)
-            ->where('appointment_date', $appointmentDate)
-            ->where('start_time', $startTime)
-            ->exists();
+            // ب. التحقق من ساعات الدوام لهذا اليوم
+            $dayOfWeek = $startTime->dayOfWeek; // 0 = الأحد، الخ
+            $schedule = DoctorSchedule::where('doctor_id', $doctorId)
+                ->where('day_of_week', $dayOfWeek)
+                ->where('is_working_day', true)
+                ->where('start_time', '<=', $startTimeString)
+                ->where('end_time', '>=', $endTime->format('H:i')) // التأكد أن وقت النهاية ضمن الدوام أيضاً
+                ->exists();
 
-        if ($isBooked) {
-            throw new \InvalidArgumentException('عذراً، هذا الموعد محجوز مسبقاً لهذا الطبيب.');
-        }
+            if (!$schedule) {
+                throw ValidationException::withMessages([
+                    'start_time' => ['عذراً، هذا الوقت خارج ساعات دوام الطبيب أو أن الجلسة تتجاوز وقت الدوام.']
+                ]);
+            }
 
-        // 5. إدارة الفواتير ضمن Transaction لضمان سلامة البيانات
-        return DB::transaction(function () use ($data, $patientId, $appointmentDate, $startTime, $doctorId) {
+            // ج. التحقق الحقيقي من التداخل الزمني (Overlap Validation) مع lockForUpdate
+            $isConflicting = Appointment::where('doctor_id', $doctorId)
+                ->where('appointment_date', $appointmentDate)
+                ->where('status', '!=', 'cancelled') // نتجاهل المواعيد الملغاة
+                ->where(function ($query) use ($startTime, $endTime) {
+                    // معادلة تقاطع الفترات الزمنية الصحيحة
+                    $query->where('start_time', '<', $endTime->format('H:i'))
+                          ->where('end_time', '>', $startTime->format('H:i'));
+                })
+                ->lockForUpdate() // منع أي حجز متزامن في نفس اللحظة لنفس الطبيب
+                ->exists();
 
-            // أ. هل لدى المريض فاتورة مفتوحة (غير مدفوعة بالكامل) حالياً؟
+            if ($isConflicting) {
+                throw ValidationException::withMessages([
+                    'start_time' => ['عذراً، هذا الوقت يتداخل مع موعد حجز آخر لهذا الطبيب.']
+                ]);
+            }
+
+            // د. إدارة الفواتير
             $invoice = Invoice::where('patient_id', $patientId)
                 ->whereIn('status', ['unpaid', 'partial'])
                 ->latest()
+                ->lockForUpdate()
                 ->first();
 
-            // ب. جلب سعر الخدمة المطلوبة لتحديد قيمة الفاتورة إذا تم إنشاؤها
-            $service = Service::find($data['service_id']);
-            $servicePrice = $service ? $service->price : 0.00;
-
             if (!$invoice) {
-                // إذا لم توجد فاتورة مفتوحة، ننشئ فاتورة جديدة تلقائياً للمريض
                 $invoice = Invoice::create([
                     'patient_id'   => $patientId,
                     'total_amount' => $servicePrice,
@@ -87,21 +104,21 @@ class AppointmentService
                     'status'       => 'unpaid',
                 ]);
             } else {
-                // إذا كانت الفاتورة موجودة مسبقاً (جلسة تابعة لنفس الكورس)، نقوم بتحديث المبلغ الإجمالي بإضافة سعر الخدمة الجديدة
                 $invoice->update([
                     'total_amount' => $invoice->total_amount + $servicePrice,
                     'final_amount' => $invoice->final_amount + $servicePrice,
                 ]);
             }
 
-            // ج. إنشاء الموعد وربطه بـ invoice_id
+            // هـ. إنشاء الموعد مع حفظ وقت النهاية (end_time) لتسهيل الفحص المستقبلي
             return Appointment::create([
                 'patient_id'       => $patientId,
                 'doctor_id'        => $doctorId,
-                'service_id'       => $data['service_id'],
-                'invoice_id'       => $invoice->id, // ربط الموعد بالفاتورة تلقائياً
+                'service_id'       => $serviceId,
+                'invoice_id'       => $invoice->id,
                 'appointment_date' => $appointmentDate,
-                'start_time'       => $startTime,
+                'start_time'       => $startTime->format('H:i'),
+                'end_time'         => $endTime->format('H:i'), // يجب التأكد من وجود هذا العمود في جدول appointments
                 'status'           => 'pending',
                 'notes'            => $data['notes'] ?? null,
             ]);

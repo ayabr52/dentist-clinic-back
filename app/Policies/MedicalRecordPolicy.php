@@ -16,7 +16,8 @@ class MedicalRecordPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        // السماح للأدمن، الطبيب، والمريض باستعراض السجلات (والسيرفس سيهتم بالفلترة)
+        return $user->hasRole(['admin', 'doctor', 'patient']);
     }
 
     /**

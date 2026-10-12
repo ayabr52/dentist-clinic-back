@@ -3,33 +3,58 @@
 namespace App\Services;
 
 use App\Models\MedicalRecord;
+use Illuminate\Support\Facades\DB;
 
 class MedicalRecordService
 {
+    public function storeRecord(array $data, int $doctorId, array $images = []): MedicalRecord
+    {
+        return DB::transaction(function () use ($data, $doctorId, $images) {
 
-    public function storeRecord(array $data, int $doctorId): MedicalRecord
-    {
-        return MedicalRecord::create([
-            'patient_id' => $data['patient_id'],
-            'doctor_id' => $doctorId,
-            'appointment_id' => $data['appointment_id'] ?? null,
-            'diagnosis' => $data['diagnosis'],
-            'prescription' => $data['prescription'] ?? null,
-            'doctor_notes' => $data['doctor_notes'] ?? null,
-            'ai_analysis_result' => $data['ai_analysis_result'] ?? null,
-        ]);
+            /** @var MedicalRecord $record */
+            $record = MedicalRecord::create([
+                'patient_id'         => $data['patient_id'],
+                'doctor_id'          => $doctorId,
+                'appointment_id'     => $data['appointment_id'] ?? null,
+                'diagnosis'          => $data['diagnosis'],
+                'prescription'       => $data['prescription'] ?? null,
+                'doctor_notes'       => $data['doctor_notes'] ?? null,
+                'ai_analysis_result' => $data['ai_analysis_result'] ?? null,
+            ]);
+
+            if (!empty($images)) {
+                foreach ($images as $imageFile) {
+                    $path = $imageFile->store('medical_images', 'public');
+
+                    $record->images()->create([
+                        'image_path' => $path,
+                        'image_type' => $data['image_type'] ?? 'xray',
+                        'title'      => $data['image_title'] ?? null,
+                    ]);
+                }
+            }
+
+            return $record->load(['patient', 'doctor', 'appointment', 'images']);
+        });
     }
-    public function getPatientRecords($user)
+
+    public function getPatientRecords($user, ?int $patientId = null)
     {
-        // إذا كان المريض يطلب سجله الطبي، أو الطبيب يطلب سجلات مرضاه، أو الأدمن الكل
+        $query = MedicalRecord::with(['patient', 'doctor', 'appointment', 'images'])
+            ->latest();
+
         if ($user->hasRole('patient')) {
-            return MedicalRecord::where('patient_id', $user->id)->with(['doctor', 'appointment'])->get();
-        } elseif ($user->hasRole('doctor')) {
-            return MedicalRecord::where('doctor_id', $user->id)->with(['patient', 'appointment'])->get();
+            return $query->where('patient_id', $user->id)->get();
         }
 
-        return MedicalRecord::with(['patient', 'doctor', 'appointment'])->get();
-    }
+        if ($user->hasRole('doctor')) {
+            $query->where('doctor_id', $user->id);
+        }
 
- 
+        if ($patientId) {
+            $query->where('patient_id', $patientId);
+        }
+
+        return $query->get();
+    }
 }

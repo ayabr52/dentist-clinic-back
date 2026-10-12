@@ -23,16 +23,36 @@ class MedicalRecordController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', MedicalRecord::class);
         $records = $this->medicalRecordService->getPatientRecords($request->user());
         return $this->successResponse($records, 'تم جلب الملفات الطبية بنجاح');
     }
 
+
+    /**
+     * Store a newly created medical record.
+     *
+     * Validates the incoming request, checks policy authorization, and saves the record
+     * together with any uploaded images for the authenticated doctor.
+     *
+     * @param  MedicalRecordRequest  $request  The validated request payload containing medical record data and optional uploaded images.
+     * @return \Illuminate\Http\JsonResponse  JSON response with the created medical record.
+     * @throws \Illuminate\Auth\Access\AuthorizationException  If the authenticated user is not authorized to create a record.
+     */
     public function store(MedicalRecordRequest $request)
     {
-
         $this->authorize('create', MedicalRecord::class);
 
-        $record = $this->medicalRecordService->storeRecord($request->validated(), $request->user()->id);
+        // جلب الملفات المرفوعة إن وجدت (تكون فارغة إذا لم يرفع الطبيب صوراً)
+        $images = $request->file('images', []);
+
+        // استدعاء السيرفس مرة واحدة فقط وتمرير البيانات والملفات
+        $record = $this->medicalRecordService->storeRecord(
+            $request->validated(),
+            auth()->id(),
+            $images
+        );
+
         return $this->successResponse($record, 'تم إنشاء السجل الطبي بنجاح', 201);
     }
 }
