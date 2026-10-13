@@ -26,10 +26,20 @@ class AppointmentController extends Controller
     {
         $this->authorize('viewAny', Appointment::class);
 
-        // جلب البيانات مقسمة لصفحات (مثلاً 15 سجل في كل صفحة) مع فلترة حسب دور المستخدم عبر السيرفس إذا رغبتِ
-        $appointments = Appointment::with(['patient', 'doctor', 'service', 'invoice'])
-            ->latest()
-            ->paginate(15);
+        $user = $request->user();
+
+        // بناء الاستعلام الأساسي مع العلاقات المطلوبة
+        $query = Appointment::with(['patient', 'doctor', 'service', 'invoice']);
+
+        // فلترة النتائج حسب دور المستخدم الحقيقي لحماية الخصوصية
+        if ($user->hasRole('patient')) {
+            $query->where('patient_id', $user->id);
+        } elseif ($user->hasRole('doctor')) {
+            $query->where('doctor_id', $user->id);
+        }
+        // الـ admin أو الأدوار الإدارية تستطيع رؤية كافة المواعيد تلقائياً
+
+        $appointments = $query->latest()->paginate(15);
 
         return AppointmentResource::collection($appointments);
     }
@@ -53,10 +63,20 @@ class AppointmentController extends Controller
 
     public function updateStatus(Request $request, Appointment $appointment)
     {
-        // 1. تفعيل حراسة البوليسي للتأكد أن المستخدم مخول بتعديل هذا الموعد حصراً
         $this->authorize('update', $appointment);
 
-        $request->validate(['status' => 'required|in:confirmed,cancelled,completed']);
+        $user = $request->user();
+
+        // تحديد الحالات المسموح إرسالها بناءً على دور المستخدم
+        $allowedStatuses = ['cancelled']; // الافتراضي المسموح للمريض
+
+        if ($user->hasRole('admin') || $user->hasRole('doctor')) {
+            $allowedStatuses = ['confirmed', 'cancelled', 'completed'];
+        }
+
+        $request->validate([
+            'status' => 'required|in:' . implode(',', $allowedStatuses)
+        ]);
 
         $updated = $this->appointmentService->updateStatus($appointment, $request->status);
 

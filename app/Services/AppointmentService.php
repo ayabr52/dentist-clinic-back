@@ -32,7 +32,7 @@ class AppointmentService
 
         // 1. جلب الخدمة لتحديد مدتها وسعرها
         $service = Service::findOrFail($serviceId);
-        $durationMinutes = $service->duration ?? 30; // مدة الجلسة بالدقائق (افتراضي 30 دقيقة إذا لم تكن محددة)
+        $durationMinutes = $service->duration_minutes ?? 30; // مدة الجلسة بالدقائق (افتراضي 30 دقيقة إذا لم تكن محددة)
         $servicePrice = $service->price ?? 0.00;
 
         // حساب وقت البداية والنهاية باستخدام Carbon

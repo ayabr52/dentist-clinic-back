@@ -14,9 +14,9 @@ class MedicalRecordTest extends TestCase
 
     public function test_doctor_can_create_medical_record()
     {
-        // 1. إنشاء طبيب ومريض
-        $doctor = User::factory()->create(['role' => 'doctor']);
-        $patient = User::factory()->create(['role' => 'patient']);
+        // 1. إنشاء طبيب ومريض بالطريقة النظيفة الصحيحة عبر Spatie States
+        $doctor = User::factory()->doctor()->create();
+        $patient = User::factory()->patient()->create();
 
         $service = Service::create([
             'name' => 'General Checkup',
@@ -59,8 +59,8 @@ class MedicalRecordTest extends TestCase
 
     public function test_patient_can_view_their_medical_records()
     {
-        $patient = User::factory()->create(['role' => 'patient']);
-        $doctor = User::factory()->create(['role' => 'doctor']);
+        $patient = User::factory()->patient()->create();
+        $doctor = User::factory()->doctor()->create();
 
         // إنشاء سجل طبي للمريض
         \App\Models\MedicalRecord::create([

@@ -16,10 +16,10 @@ class AuthTest extends TestCase
         parent::setUp();
 
         // إنشاء الأدوار الأساسية لتعمل مع حزمة Spatie أثناء التيست
-        Role::create(['name' => 'patient']);
-        Role::create(['name' => 'doctor']);
-        Role::create(['name' => 'admin']);
-        Role::create(['name' => 'receptionist']);
+        Role::firstOrCreate(['name' => 'patient', 'guard_name' => 'api']);
+        Role::firstOrCreate(['name' => 'doctor', 'guard_name' => 'api']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'api']);
+        Role::firstOrCreate(['name' => 'receptionist', 'guard_name' => 'api']);
     }
 
     public function test_it_can_register_a_new_user_successfully()
@@ -34,14 +34,14 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-                 ->assertJsonStructure([
-                     'status',
-                     'message',
-                     'data' => [
-                         'user',
-                         'token'
-                     ]
-                 ]);
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'data' => [
+                    'user',
+                    'token'
+                ]
+            ]);
 
         $this->assertDatabaseHas('users', [
             'email' => 'aya@example.com'
@@ -63,13 +63,13 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-                 ->assertJsonStructure([
-                     'status',
-                     'message',
-                     'data' => [
-                         'user',
-                         'token'
-                     ]
-                 ]);
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'data' => [
+                    'user',
+                    'token'
+                ]
+            ]);
     }
 }

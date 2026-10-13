@@ -37,16 +37,25 @@ class AppointmentPolicy
     /**
      * Determine whether the user can update/change appointment status.
      */
-    public function update(User $user, Appointment $appointment): bool
+   public function update(User $user, Appointment $appointment): bool
     {
-        // الأدمن أو الطبيب المسؤول عن الموعد يمكنهم تعديله
-        if ($user->hasRole('admin') || $user->id === $appointment->doctor_id) {
+        // الأدمن لديه صلاحية مطلقة
+        if ($user->hasRole('admin')) {
             return true;
         }
 
-        // المريض يمكنه تعديل/إلغاء موعده فقط إذا كان لا يزال في حالة "معلق" أو "مؤكد" وقبل موعدها
-        if ($user->hasRole('patient') && $user->id === $appointment->patient_id) {
-            return in_array($appointment->status, ['pending', 'confirmed']);
+        // الطبيب يمكنه تعديل مواعيده الخاصة
+        if ($user->hasRole('doctor') && $appointment->doctor_id === $user->id) {
+            return true;
+        }
+
+        // إذا كان المستخدم مريضاً، مسموح له فقط إلغاء موعده الخاص بالشروط الزمنية
+        if ($user->hasRole('patient') && $appointment->patient_id === $user->id) {
+            // التحقق أن الموعد لم يمر وقته بعد (بمقارنة تاريخ ووقت الموعد بالوقت الحالي)
+            $appointmentDateTime = \Carbon\Carbon::parse($appointment->appointment_date . ' ' . $appointment->start_time);
+
+            // المريض يمكنه فقط إلغاء موعد لم ينقضِ وقته بعد (وليس تعديل أي شيء آخر)
+            return $appointmentDateTime->isFuture() && in_array($appointment->status, ['pending', 'confirmed']);
         }
 
         return false;

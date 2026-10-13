@@ -18,7 +18,8 @@ class DoctorScheduleAndLeaveTest extends TestCase
     {
         parent::setUp();
 
-        $this->doctor = User::factory()->create();
+        // استخدام الـ State الصحيح لتعيين دور الطبيب عبر Spatie
+        $this->doctor = User::factory()->doctor()->create();
     }
 
     #[Test]
@@ -26,11 +27,15 @@ class DoctorScheduleAndLeaveTest extends TestCase
     {
         $response = $this->actingAs($this->doctor, 'sanctum')
             ->postJson('/api/v1/doctor-schedules', [
-                'doctor_id' => $this->doctor->id,
-                'day_of_week' => 1,
-                'start_time' => '09:00',
-                'end_time' => '17:00',
-                'is_working_day' => true,
+                'doctor_id' => $this->doctor->id, // إضافة doctor_id خارج أو داخل المصفوفة حسب الـ Validation لديك
+                'schedules' => [
+                    [
+                        'day_of_week' => 1,
+                        'start_time' => '09:00',
+                        'end_time' => '17:00',
+                        'is_working_day' => true,
+                    ]
+                ]
             ]);
 
         $response->assertStatus(201)

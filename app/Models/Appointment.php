@@ -19,6 +19,7 @@ class Appointment extends Model
         'invoice_id',
         'appointment_date',
         'start_time',
+        'end_time',
         'status',
         'notes'
     ];

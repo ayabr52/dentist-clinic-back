@@ -17,8 +17,8 @@ class ServiceTest extends TestCase
         parent::setUp();
 
         // إنشاء الأدوار الضرورية لفحص الصلاحيات
-        Role::firstOrCreate(['name' => 'admin']);
-        Role::firstOrCreate(['name' => 'patient']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'api']);
+        Role::firstOrCreate(['name' => 'patient', 'guard_name' => 'api']);
     }
 
     public function test_anyone_can_view_active_services()

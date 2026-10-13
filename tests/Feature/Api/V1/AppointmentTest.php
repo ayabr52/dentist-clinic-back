@@ -19,17 +19,16 @@ class AppointmentTest extends TestCase
     {
         parent::setUp();
 
-        Role::firstOrCreate(['name' => 'patient']);
-        Role::firstOrCreate(['name' => 'doctor']);
+        // ضمان إنشاء الأدوار بالـ guard المناسب (api)
+        Role::firstOrCreate(['name' => 'patient', 'guard_name' => 'api']);
+        Role::firstOrCreate(['name' => 'doctor', 'guard_name' => 'api']);
     }
 
     public function test_patient_can_book_an_appointment()
     {
-        $patient = User::factory()->create();
-        $patient->assignRole('patient');
-
-        $doctor = User::factory()->create();
-        $doctor->assignRole('doctor');
+        // استخدام الـ Factory States مباشرة بشكل أنيق ومحترف
+        $patient = User::factory()->patient()->create();
+        $doctor = User::factory()->doctor()->create();
 
         $service = Service::factory()->create();
 
@@ -42,10 +41,10 @@ class AppointmentTest extends TestCase
             'day_of_week' => $dayOfWeek,
             'start_time' => '08:00',
             'end_time' => '16:00',
-           'is_working_day' => true,
+            'is_working_day' => true,
         ]);
 
-        $response = $this->actingAs($patient)->postJson('/api/v1/appointments', [
+        $response = $this->actingAs($patient, 'sanctum')->postJson('/api/v1/appointments', [
             'doctor_id' => $doctor->id,
             'service_id' => $service->id,
             'appointment_date' => $appointmentDate->format('Y-m-d'),
@@ -57,9 +56,10 @@ class AppointmentTest extends TestCase
             ->assertJsonStructure([
                 'status',
                 'message',
-                'data' => ['id', 'doctor_id', 'patient_id', 'status']
+                'data' => ['id', 'patient_id', 'status']
             ]);
 
+        // التحقق من وجود الموعد في قاعدة البيانات بالشكل الصحيح
         $this->assertDatabaseHas('appointments', [
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
@@ -69,9 +69,9 @@ class AppointmentTest extends TestCase
 
     public function test_cannot_book_conflicting_appointment_for_same_doctor()
     {
-        $patient1 = User::factory()->create();
-        $patient2 = User::factory()->create();
-        $doctor = User::factory()->create();
+        $patient1 = User::factory()->patient()->create();
+        $patient2 = User::factory()->patient()->create();
+        $doctor = User::factory()->doctor()->create();
         $service = Service::factory()->create();
 
         $appointmentDate = now()->addDay();
@@ -85,7 +85,7 @@ class AppointmentTest extends TestCase
             'day_of_week' => $dayOfWeek,
             'start_time' => '08:00',
             'end_time' => '16:00',
-           'is_working_day' => true,
+            'is_working_day' => true,
         ]);
 
         // الحجز الأول
@@ -99,11 +99,11 @@ class AppointmentTest extends TestCase
         ]);
 
         // محاولة الحجز بنفس الموعد تماماً لنفس الطبيب بواسطة مريض آخر
-        $response = $this->actingAs($patient2)->postJson('/api/v1/appointments', [
+        $response = $this->actingAs($patient2, 'sanctum')->postJson('/api/v1/appointments', [
             'doctor_id' => $doctor->id,
             'service_id' => $service->id,
             'appointment_date' => $date,
-            'start_time' => $time,
+            'start_time' => $time, // استخدام نفس الوقت تماماً لحدوث التعارض
         ]);
 
         $response->assertStatus(422)

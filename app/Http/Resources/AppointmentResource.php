@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class AppointmentResource extends JsonResource
 {
-    public function totransform(Request $request): array
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
@@ -21,7 +21,7 @@ class AppointmentResource extends JsonResource
             'doctor' => new UserResource($this->whenLoaded('doctor')),
             'service' => new ServiceResource($this->whenLoaded('service')),
             'invoice' => new InvoiceResource($this->whenLoaded('invoice')),
-            'created_at' => $this->created_at->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }

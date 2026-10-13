@@ -7,7 +7,8 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Appointment;
 use App\Models\Payment;
-use App\Models\Service; // تأكدي من استيراد موديل الخدمة
+use App\Models\Invoice;
+use App\Models\Service;
 use PHPUnit\Framework\Attributes\Test;
 
 class PaymentTest extends TestCase
@@ -21,26 +22,39 @@ class PaymentTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        // استخدام الـ State الصحيح لتعيين دور المريض عبر Spatie
+        $this->user = User::factory()->patient()->create();
 
-        // إنشاء الطبيب والخدمة لضمان وجود المفاتيح الأجنبية
-        $doctor = User::factory()->create(); // أو Role/Doctor Factory إذا كان لديكِ
+        // إنشاء الطبيب والخدمة
+        $doctor = User::factory()->doctor()->create();
         $service = Service::factory()->create();
 
-        $this->appointment = Appointment::factory()->create([
+        $this->appointment = Appointment::create([
             'patient_id' => $this->user->id,
             'doctor_id'  => $doctor->id,
             'service_id' => $service->id,
             'status'     => 'confirmed',
+            'appointment_date' => now()->addDay()->format('Y-m-d'),
+            'start_time' => '10:00',
         ]);
     }
 
     #[Test]
     public function it_can_create_a_payment_record()
     {
+        // إذا كان النظام يتطلب invoice_id، نقوم بإنشائها مسبقاً
+        $invoice = Invoice::create([
+            'appointment_id' => $this->appointment->id,
+            'patient_id' => $this->user->id,
+            'total_amount' => 150.00,
+            'discount' => 0.00,
+            'final_amount' => 150.00, // إضافة الحقل المفقود
+            'status' => 'unpaid',
+        ]);
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/payments', [
                 'appointment_id' => $this->appointment->id,
+                'invoice_id'     => $invoice->id,
                 'patient_id'     => $this->user->id,
                 'amount'         => 150.00,
                 'discount'       => 20.00,
@@ -66,8 +80,14 @@ class PaymentTest extends TestCase
     #[Test]
     public function it_can_update_payment_status()
     {
+        $invoice = Invoice::factory()->create([
+            'appointment_id' => $this->appointment->id,
+            'patient_id' => $this->user->id,
+        ]);
+
         $payment = Payment::create([
             'appointment_id' => $this->appointment->id,
+            'invoice_id'     => $invoice->id,
             'patient_id'     => $this->user->id,
             'amount'         => 100.00,
             'discount'       => 0.00,
