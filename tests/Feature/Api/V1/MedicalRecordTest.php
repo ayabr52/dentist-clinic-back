@@ -2,9 +2,10 @@
 
 namespace Tests\Feature\Api\V1;
 
-use App\Models\User;
 use App\Models\Appointment;
+use App\Models\MedicalRecord;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -21,7 +22,7 @@ class MedicalRecordTest extends TestCase
         $service = Service::create([
             'name' => 'General Checkup',
             'price' => 100,
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         $appointment = Appointment::create([
@@ -30,7 +31,7 @@ class MedicalRecordTest extends TestCase
             'service_id' => $service->id,
             'appointment_date' => now()->addDay()->format('Y-m-d'),
             'start_time' => '10:00',
-            'status' => 'confirmed'
+            'status' => 'confirmed',
         ]);
 
         // 2. إرسال طلب إضافة سجل طبي من قبل الطبيب
@@ -47,7 +48,7 @@ class MedicalRecordTest extends TestCase
             ->assertJsonStructure([
                 'status',
                 'message',
-                'data' => ['id', 'patient_id', 'doctor_id', 'diagnosis', 'prescription']
+                'data' => ['id', 'patient_id', 'doctor_id', 'diagnosis', 'prescription'],
             ]);
 
         $this->assertDatabaseHas('medical_records', [
@@ -63,7 +64,7 @@ class MedicalRecordTest extends TestCase
         $doctor = User::factory()->doctor()->create();
 
         // إنشاء سجل طبي للمريض
-        \App\Models\MedicalRecord::create([
+        MedicalRecord::create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
             'diagnosis' => 'فحص دوري',
@@ -77,8 +78,8 @@ class MedicalRecordTest extends TestCase
                 'status',
                 'message',
                 'data' => [
-                    '*' => ['id', 'diagnosis', 'doctor']
-                ]
+                    '*' => ['id', 'diagnosis', 'doctor'],
+                ],
             ]);
     }
 }

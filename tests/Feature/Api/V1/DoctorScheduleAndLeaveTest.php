@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class DoctorScheduleAndLeaveTest extends TestCase
 {
@@ -34,8 +34,8 @@ class DoctorScheduleAndLeaveTest extends TestCase
                         'start_time' => '09:00',
                         'end_time' => '17:00',
                         'is_working_day' => true,
-                    ]
-                ]
+                    ],
+                ],
             ]);
 
         $response->assertStatus(201)
@@ -52,24 +52,24 @@ class DoctorScheduleAndLeaveTest extends TestCase
     }
 
     #[Test]
-  public function it_validates_schedule_creation()
-  {
-      $response = $this->actingAs($this->doctor, 'sanctum')
-          ->postJson('/api/v1/doctor-schedules', [
-              'doctor_id' => $this->doctor->id,
-              'schedules' => [
-                  [
-                      'day_of_week' => 1,
-                  ]
-              ]
-          ]);
+    public function it_validates_schedule_creation()
+    {
+        $response = $this->actingAs($this->doctor, 'sanctum')
+            ->postJson('/api/v1/doctor-schedules', [
+                'doctor_id' => $this->doctor->id,
+                'schedules' => [
+                    [
+                        'day_of_week' => 1,
+                    ],
+                ],
+            ]);
 
-      $response->assertStatus(422)
-          ->assertJsonValidationErrors([
-              'schedules.0.start_time',
-              'schedules.0.end_time',
-          ]);
-  }
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors([
+                'schedules.0.start_time',
+                'schedules.0.end_time',
+            ]);
+    }
 
     #[Test]
     public function it_can_create_a_doctor_leave()

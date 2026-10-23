@@ -1,12 +1,12 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Auth\AuthenticationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*')) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'العنصر المطلوب غير موجود في النظام'
+                    'message' => 'العنصر المطلوب غير موجود في النظام',
                 ], 404);
             }
         });
@@ -34,7 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*')) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'المسار أو الرابط المطلُوب غير موجود'
+                    'message' => 'المسار أو الرابط المطلُوب غير موجود',
                 ], 404);
             }
         });
@@ -44,7 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*')) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'غير مصرح لك بالوصول، يرجى تسجيل الدخول أولاً'
+                    'message' => 'غير مصرح لك بالوصول، يرجى تسجيل الدخول أولاً',
                 ], 401);
             }
         });

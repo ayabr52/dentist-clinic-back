@@ -2,14 +2,13 @@
 
 namespace Tests\Feature\Api\V1;
 
-use App\Models\User;
-use App\Models\Service;
 use App\Models\Appointment;
 use App\Models\DoctorSchedule;
+use App\Models\Service;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
-use Carbon\Carbon;
 
 class AppointmentTest extends TestCase
 {
@@ -56,7 +55,7 @@ class AppointmentTest extends TestCase
             ->assertJsonStructure([
                 'status',
                 'message',
-                'data' => ['id', 'patient_id', 'status']
+                'data' => ['id', 'patient_id', 'status'],
             ]);
 
         // التحقق من وجود الموعد في قاعدة البيانات بالشكل الصحيح
@@ -95,7 +94,7 @@ class AppointmentTest extends TestCase
             'service_id' => $service->id,
             'appointment_date' => $date,
             'start_time' => $time,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         // محاولة الحجز بنفس الموعد تماماً لنفس الطبيب بواسطة مريض آخر
@@ -109,7 +108,7 @@ class AppointmentTest extends TestCase
         $response->assertStatus(422)
             ->assertJson([
                 'status' => 'error',
-                'message' => 'عذراً، هذا الوقت يتداخل مع موعد حجز آخر لهذا الطبيب.'
+                'message' => 'عذراً، هذا الوقت يتداخل مع موعد حجز آخر لهذا الطبيب.',
             ]);
     }
 }

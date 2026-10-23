@@ -7,8 +7,10 @@ use App\Http\Requests\Api\V1\MedicalRecordRequest;
 use App\Models\MedicalRecord;
 use App\Services\MedicalRecordService;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class MedicalRecordController extends Controller
 {
@@ -25,9 +27,9 @@ class MedicalRecordController extends Controller
     {
         $this->authorize('viewAny', MedicalRecord::class);
         $records = $this->medicalRecordService->getPatientRecords($request->user());
+
         return $this->successResponse($records, 'تم جلب الملفات الطبية بنجاح');
     }
-
 
     /**
      * Store a newly created medical record.
@@ -36,8 +38,9 @@ class MedicalRecordController extends Controller
      * together with any uploaded images for the authenticated doctor.
      *
      * @param  MedicalRecordRequest  $request  The validated request payload containing medical record data and optional uploaded images.
-     * @return \Illuminate\Http\JsonResponse  JSON response with the created medical record.
-     * @throws \Illuminate\Auth\Access\AuthorizationException  If the authenticated user is not authorized to create a record.
+     * @return JsonResponse JSON response with the created medical record.
+     *
+     * @throws AuthorizationException If the authenticated user is not authorized to create a record.
      */
     public function store(MedicalRecordRequest $request)
     {

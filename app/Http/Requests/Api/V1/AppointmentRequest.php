@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Api\V1;
 
-use Illuminate\Foundation\Http\FormRequest;
-use App\Models\DoctorSchedule;
 use App\Models\DoctorLeave;
+use App\Models\DoctorSchedule;
 use Carbon\Carbon;
+use Illuminate\Foundation\Http\FormRequest;
 
 class AppointmentRequest extends FormRequest
 {
@@ -17,11 +17,11 @@ class AppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'doctor_id'        => ['required', 'exists:users,id'],
-            'service_id'       => ['required', 'exists:services,id'],
+            'doctor_id' => ['required', 'exists:users,id'],
+            'service_id' => ['required', 'exists:services,id'],
             'appointment_date' => ['required', 'date', 'after_or_equal:today'],
-            'start_time'       => ['required', 'date_format:H:i'],
-            'notes'            => ['nullable', 'string', 'max:500'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'notes' => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -31,11 +31,11 @@ class AppointmentRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            $doctorId  = $this->doctor_id;
+            $doctorId = $this->doctor_id;
             $dateString = $this->appointment_date;
             $startTime = $this->start_time;
 
-            if (!$doctorId || !$dateString || !$startTime) {
+            if (! $doctorId || ! $dateString || ! $startTime) {
                 return;
             }
 
@@ -51,6 +51,7 @@ class AppointmentRequest extends FormRequest
 
             if ($isLeave) {
                 $validator->errors()->add('appointment_date', 'عذراً، الطبيب في إجازة خلال هذا التاريخ.');
+
                 return;
             }
 
@@ -60,8 +61,9 @@ class AppointmentRequest extends FormRequest
                 ->where('is_working_day', true)
                 ->first();
 
-            if (!$schedule) {
+            if (! $schedule) {
                 $validator->errors()->add('appointment_date', 'عذراً، الطبيب غير مسجل دوامه في هذا اليوم من الأسبوع.');
+
                 return;
             }
 

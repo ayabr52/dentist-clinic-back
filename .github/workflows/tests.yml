@@ -32,3 +32,6 @@ jobs:
 
     - name: Check Code Style with Pint
       run: vendor/bin/pint --test
+
+    - name: Generate Key
+      run: php artisan key:generate

@@ -1,16 +1,15 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\ServiceController;
 use App\Http\Controllers\Api\V1\AppointmentController;
-use App\Http\Controllers\Api\V1\MedicalRecordController;
-use App\Http\Controllers\Api\V1\DoctorScheduleController;
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DoctorLeaveController;
+use App\Http\Controllers\Api\V1\DoctorScheduleController;
 use App\Http\Controllers\Api\V1\DoctorServiceController;
 use App\Http\Controllers\Api\V1\InvoiceController;
+use App\Http\Controllers\Api\V1\MedicalRecordController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\ServiceController;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Middleware\RoleMiddleware;
 
 /**
@@ -18,7 +17,6 @@ use Spatie\Permission\Middleware\RoleMiddleware;
  * Clinic Management System API Routes (v1)
  * ============================================================================
  */
-
 Route::prefix('v1')->group(function () {
 
     /**
@@ -53,7 +51,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/medical-records', [MedicalRecordController::class, 'index']);
         Route::post('/medical-records', [MedicalRecordController::class, 'store']);
 
-
         /**
          * Doctor & Admin Protected Routes
          */
@@ -68,7 +65,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/doctor-leaves', [DoctorLeaveController::class, 'store']);
             Route::delete('/doctor-leaves/{leave}', [DoctorLeaveController::class, 'destroy']);
         });
-
 
         /**
          * Financial, Reception & Management Routes (Invoices, Payments & Admin)

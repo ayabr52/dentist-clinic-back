@@ -2,22 +2,24 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Appointment;
-use App\Models\Payment;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Service;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class PaymentTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $user;
+
     protected $appointment;
+
     protected $invoice;
 
     protected function setUp(): void
@@ -32,21 +34,21 @@ class PaymentTest extends TestCase
         $service = Service::factory()->create();
 
         $this->invoice = Invoice::create([
-            'patient_id'   => $this->user->id,
+            'patient_id' => $this->user->id,
             'total_amount' => 150.00,
-            'discount'     => 0.00,
+            'discount' => 0.00,
             'final_amount' => 150.00,
-            'status'       => 'unpaid',
+            'status' => 'unpaid',
         ]);
 
         $this->appointment = Appointment::create([
-            'patient_id'       => $this->user->id,
-            'doctor_id'        => $doctor->id,
-            'service_id'       => $service->id,
-            'invoice_id'       => $this->invoice->id,
-            'status'           => 'confirmed',
+            'patient_id' => $this->user->id,
+            'doctor_id' => $doctor->id,
+            'service_id' => $service->id,
+            'invoice_id' => $this->invoice->id,
+            'status' => 'confirmed',
             'appointment_date' => now()->addDay()->format('Y-m-d'),
-            'start_time'       => '10:00',
+            'start_time' => '10:00',
         ]);
     }
 
@@ -56,14 +58,14 @@ class PaymentTest extends TestCase
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/payments', [
                 'appointment_id' => $this->appointment->id,
-                'invoice_id'     => $this->invoice->id,
-                'patient_id'     => $this->user->id,
-                'amount'         => 150.00,
-                'discount'       => 20.00,
-                'final_amount'   => 130.00,
+                'invoice_id' => $this->invoice->id,
+                'patient_id' => $this->user->id,
+                'amount' => 150.00,
+                'discount' => 20.00,
+                'final_amount' => 130.00,
                 'payment_method' => 'cash',
-                'status'         => 'pending',
-                'collected_by'   => $this->user->id,
+                'status' => 'pending',
+                'collected_by' => $this->user->id,
             ]);
 
         $response->assertStatus(201);
@@ -78,14 +80,14 @@ class PaymentTest extends TestCase
     {
         $payment = Payment::create([
             'appointment_id' => $this->appointment->id,
-            'invoice_id'     => $this->invoice->id,
-            'patient_id'     => $this->user->id,
-            'amount'         => 100.00,
-            'discount'       => 0.00,
-            'final_amount'   => 100.00,
-            'status'         => 'pending',
+            'invoice_id' => $this->invoice->id,
+            'patient_id' => $this->user->id,
+            'amount' => 100.00,
+            'discount' => 0.00,
+            'final_amount' => 100.00,
+            'status' => 'pending',
             'payment_method' => 'cash',
-            'collected_by'   => $this->user->id,
+            'collected_by' => $this->user->id,
         ]);
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -96,7 +98,7 @@ class PaymentTest extends TestCase
         $response->assertStatus(200);
 
         $this->assertDatabaseHas('payments', [
-            'id'     => $payment->id,
+            'id' => $payment->id,
             'status' => 'paid',
         ]);
     }

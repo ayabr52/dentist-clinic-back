@@ -6,8 +6,8 @@ use App\Models\Appointment;
 use App\Models\DoctorSchedule;
 use App\Models\Invoice;
 use App\Models\Service;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AppointmentService
@@ -51,7 +51,7 @@ class AppointmentService
 
             if ($isLeave) {
                 throw ValidationException::withMessages([
-                    'appointment_date' => ['عذراً، الطبيب في إجازة في هذا التاريخ.']
+                    'appointment_date' => ['عذراً، الطبيب في إجازة في هذا التاريخ.'],
                 ]);
             }
 
@@ -64,9 +64,9 @@ class AppointmentService
                 ->where('end_time', '>=', $endTime->format('H:i')) // التأكد أن وقت النهاية ضمن الدوام أيضاً
                 ->exists();
 
-            if (!$schedule) {
+            if (! $schedule) {
                 throw ValidationException::withMessages([
-                    'start_time' => ['عذراً، هذا الوقت خارج ساعات دوام الطبيب أو أن الجلسة تتجاوز وقت الدوام.']
+                    'start_time' => ['عذراً، هذا الوقت خارج ساعات دوام الطبيب أو أن الجلسة تتجاوز وقت الدوام.'],
                 ]);
             }
 
@@ -77,17 +77,17 @@ class AppointmentService
                 ->where(function ($query) use ($startTimeString, $startTime, $endTime) {
                     // التحقق من تطابق وقت البداية تماماً أو تقاطع الفترات
                     $query->where('start_time', $startTimeString)
-                          ->orWhere(function ($q) use ($startTime, $endTime) {
-                              $q->where('start_time', '<', $endTime->format('H:i'))
+                        ->orWhere(function ($q) use ($startTime, $endTime) {
+                            $q->where('start_time', '<', $endTime->format('H:i'))
                                 ->where('end_time', '>', $startTime->format('H:i'));
-                          });
+                        });
                 })
                 ->lockForUpdate()
                 ->exists();
 
             if ($isConflicting) {
                 throw ValidationException::withMessages([
-                    'start_time' => ['عذراً، هذا الوقت يتداخل مع موعد حجز آخر لهذا الطبيب.']
+                    'start_time' => ['عذراً، هذا الوقت يتداخل مع موعد حجز آخر لهذا الطبيب.'],
                 ]);
             }
 
@@ -98,13 +98,13 @@ class AppointmentService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$invoice) {
+            if (! $invoice) {
                 $invoice = Invoice::create([
-                    'patient_id'   => $patientId,
+                    'patient_id' => $patientId,
                     'total_amount' => $servicePrice,
                     'final_amount' => $servicePrice,
-                    'paid_amount'  => 0.00,
-                    'status'       => 'unpaid',
+                    'paid_amount' => 0.00,
+                    'status' => 'unpaid',
                 ]);
             } else {
                 $invoice->update([
@@ -115,15 +115,15 @@ class AppointmentService
 
             // هـ. إنشاء الموعد مع حفظ وقت النهاية (end_time) لتسهيل الفحص المستقبلي
             return Appointment::create([
-                'patient_id'       => $patientId,
-                'doctor_id'        => $doctorId,
-                'service_id'       => $serviceId,
-                'invoice_id'       => $invoice->id,
+                'patient_id' => $patientId,
+                'doctor_id' => $doctorId,
+                'service_id' => $serviceId,
+                'invoice_id' => $invoice->id,
                 'appointment_date' => $appointmentDate,
-                'start_time'       => $startTime->format('H:i'),
-                'end_time'         => $endTime->format('H:i'), // يجب التأكد من وجود هذا العمود في جدول appointments
-                'status'           => 'pending',
-                'notes'            => $data['notes'] ?? null,
+                'start_time' => $startTime->format('H:i'),
+                'end_time' => $endTime->format('H:i'), // يجب التأكد من وجود هذا العمود في جدول appointments
+                'status' => 'pending',
+                'notes' => $data['notes'] ?? null,
             ]);
         });
     }
@@ -131,6 +131,7 @@ class AppointmentService
     public function updateStatus(Appointment $appointment, string $status): Appointment
     {
         $appointment->update(['status' => $status]);
+
         return $appointment;
     }
 }

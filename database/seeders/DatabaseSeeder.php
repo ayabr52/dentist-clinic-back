@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,58 +17,58 @@ class DatabaseSeeder extends Seeder
         // 2. إنشاء حساب Admin
         $admin = User::create([
             'first_name' => 'Aya',
-            'last_name'  => 'Barghouth',
-            'email'      => 'admin@clinic.com',
-            'password'   => Hash::make('password123'),
+            'last_name' => 'Barghouth',
+            'email' => 'admin@clinic.com',
+            'password' => Hash::make('password123'),
         ]);
         $admin->assignRole('admin');
 
         // 3. إنشاء حساب Doctor
         $doctor = User::create([
-            'first_name'     => 'Ahmad',
-            'last_name'      => 'Ali',
-            'email'          => 'doctor@clinic.com',
-            'phone'          => '0912345678',
+            'first_name' => 'Ahmad',
+            'last_name' => 'Ali',
+            'email' => 'doctor@clinic.com',
+            'phone' => '0912345678',
             'specialization' => 'General Dentistry',
-            'password'       => Hash::make('password123'),
+            'password' => Hash::make('password123'),
         ]);
         $doctor->assignRole('doctor');
 
         // 4. إنشاء حساب Receptionist (موظف الاستقبال)
         $receptionist = User::create([
             'first_name' => 'Mona',
-            'last_name'  => 'Omar',
-            'email'      => 'reception@clinic.com',
-            'phone'      => '0955555555',
-            'password'   => Hash::make('password123'),
+            'last_name' => 'Omar',
+            'email' => 'reception@clinic.com',
+            'phone' => '0955555555',
+            'password' => Hash::make('password123'),
         ]);
         $receptionist->assignRole('receptionist');
 
         // 5. إنشاء حساب Patient
         $patient = User::create([
             'first_name' => 'Sara',
-            'last_name'  => 'Khalid',
-            'email'      => 'patient@clinic.com',
-            'phone'      => '0987654321',
-            'password'   => Hash::make('password123'),
+            'last_name' => 'Khalid',
+            'email' => 'patient@clinic.com',
+            'phone' => '0987654321',
+            'password' => Hash::make('password123'),
         ]);
         $patient->assignRole('patient');
 
         // 6. إنشاء خدمات طبية
         $service1 = Service::create([
-            'name'             => 'كشف عام',
-            'description'      => 'معاينة وتشخيص مبدئي للحالة الطبية',
-            'price'            => 100.00,
+            'name' => 'كشف عام',
+            'description' => 'معاينة وتشخيص مبدئي للحالة الطبية',
+            'price' => 100.00,
             'duration_minutes' => 30,
-            'is_active'        => true,
+            'is_active' => true,
         ]);
 
         $service2 = Service::create([
-            'name'             => 'تنظيف أسنان',
-            'description'      => 'إزالة الجير والعناية باللثة',
-            'price'            => 250.00,
+            'name' => 'تنظيف أسنان',
+            'description' => 'إزالة الجير والعناية باللثة',
+            'price' => 250.00,
             'duration_minutes' => 45,
-            'is_active'        => true,
+            'is_active' => true,
         ]);
 
         // 7. ربط الطبيب بالخدمات مع سعر مخصص (Custom Price)

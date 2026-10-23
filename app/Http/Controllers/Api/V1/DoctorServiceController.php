@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class DoctorServiceController extends Controller
 {
-
     /**
      * جلب قائمة جميع الأطباء في العيادة مع تخصصاتهم
      */
@@ -21,7 +20,7 @@ class DoctorServiceController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $doctors
+            'data' => $doctors,
         ]);
     }
 
@@ -41,7 +40,7 @@ class DoctorServiceController extends Controller
         $syncData = [];
         foreach ($request->services as $item) {
             $syncData[$item['service_id']] = [
-                'custom_price' => $item['custom_price'] ?? null
+                'custom_price' => $item['custom_price'] ?? null,
             ];
         }
 
@@ -51,7 +50,7 @@ class DoctorServiceController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'تم ربط الخدمات بالطبيب بنجاح',
-            'data' => $doctor->load('services')
+            'data' => $doctor->load('services'),
         ]);
     }
 
@@ -67,8 +66,8 @@ class DoctorServiceController extends Controller
             'status' => 'success',
             'data' => [
                 'service' => $service->name,
-                'doctors' => $doctors
-            ]
+                'doctors' => $doctors,
+            ],
         ]);
     }
 
@@ -85,8 +84,8 @@ class DoctorServiceController extends Controller
                 'doctor_id' => $doctor->id,
                 'doctor_name' => $doctor->full_name,
                 'specialization' => $doctor->specialization,
-                'services' => $doctor->services
-            ]
+                'services' => $doctor->services,
+            ],
         ]);
     }
 
@@ -100,7 +99,7 @@ class DoctorServiceController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'تم إزالة الخدمة عن الطبيب بنجاح'
+            'message' => 'تم إزالة الخدمة عن الطبيب بنجاح',
         ]);
     }
 }

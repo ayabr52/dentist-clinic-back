@@ -31,7 +31,7 @@ return [
         'role' => Role::class,
 
     ],
-    
+
     'default_guard_name' => 'sanctum',
 
     'table_names' => [

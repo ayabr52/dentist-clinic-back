@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Appointment;
 use App\Models\User;
+use Carbon\Carbon;
 
 class AppointmentPolicy
 {
@@ -37,7 +38,7 @@ class AppointmentPolicy
     /**
      * Determine whether the user can update/change appointment status.
      */
-   public function update(User $user, Appointment $appointment): bool
+    public function update(User $user, Appointment $appointment): bool
     {
         // الأدمن لديه صلاحية مطلقة
         if ($user->hasRole('admin')) {
@@ -52,7 +53,7 @@ class AppointmentPolicy
         // إذا كان المستخدم مريضاً، مسموح له فقط إلغاء موعده الخاص بالشروط الزمنية
         if ($user->hasRole('patient') && $appointment->patient_id === $user->id) {
             // التحقق أن الموعد لم يمر وقته بعد (بمقارنة تاريخ ووقت الموعد بالوقت الحالي)
-            $appointmentDateTime = \Carbon\Carbon::parse($appointment->appointment_date . ' ' . $appointment->start_time);
+            $appointmentDateTime = Carbon::parse($appointment->appointment_date.' '.$appointment->start_time);
 
             // المريض يمكنه فقط إلغاء موعد لم ينقضِ وقته بعد (وليس تعديل أي شيء آخر)
             return $appointmentDateTime->isFuture() && in_array($appointment->status, ['pending', 'confirmed']);

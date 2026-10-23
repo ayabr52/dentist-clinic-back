@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Invoice;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +19,7 @@ class InvoiceFactory extends Factory
     public function definition(): array
     {
         return [
-            'patient_id' => \App\Models\User::factory(),
+            'patient_id' => User::factory(),
             'total_amount' => 100.00,
             'final_amount' => 100.00,
             'paid_amount' => 0.00,

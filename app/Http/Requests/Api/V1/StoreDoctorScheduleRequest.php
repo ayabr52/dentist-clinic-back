@@ -14,11 +14,11 @@ class StoreDoctorScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'doctor_id'                 => ['required', 'exists:users,id'],
-            'schedules'                 => ['required', 'array', 'min:1'],
-            'schedules.*.day_of_week'    => ['required', 'integer', 'between:0,6'],
-            'schedules.*.start_time'     => ['required', 'date_format:H:i'],
-            'schedules.*.end_time'       => ['required', 'date_format:H:i', 'after:schedules.*.start_time'],
+            'doctor_id' => ['required', 'exists:users,id'],
+            'schedules' => ['required', 'array', 'min:1'],
+            'schedules.*.day_of_week' => ['required', 'integer', 'between:0,6'],
+            'schedules.*.start_time' => ['required', 'date_format:H:i'],
+            'schedules.*.end_time' => ['required', 'date_format:H:i', 'after:schedules.*.start_time'],
             'schedules.*.is_working_day' => ['nullable', 'boolean'],
         ];
     }

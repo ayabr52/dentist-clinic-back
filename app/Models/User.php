@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Permission\Traits\HasRoles; // لا تنسي تفعلي حزمة الصلاحيات هنا بالموديل
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable; // لا تنسي تفعلي حزمة الصلاحيات هنا بالموديل
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Service;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRoles , HasApiTokens;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable , SoftDeletes;
 
     // تحديد الـ Guard الخاص بـ Spatie ليتطابق مع الـ API
     protected string $guard_name = 'api';
@@ -54,15 +53,14 @@ class User extends Authenticatable
         );
     }
 
-
     /**
      * الخدمات التي يقدمها الطبيب (Doctor - Services Relationship)
      */
     public function services()
     {
         return $this->belongsToMany(Service::class, 'doctor_services', 'doctor_id', 'service_id')
-                    ->withPivot('custom_price')
-                    ->withTimestamps();
+            ->withPivot('custom_price')
+            ->withTimestamps();
     }
 
     /**

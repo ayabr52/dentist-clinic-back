@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class DoctorLeaveController extends Controller
 {
     use AuthorizesRequests;
-    
+
     public function index(Request $request)
     {
         $query = DoctorLeave::with(['doctor' => function ($q) {
@@ -26,7 +26,7 @@ class DoctorLeaveController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $query->get()
+            'data' => $query->get(),
         ]);
     }
 
@@ -39,16 +39,16 @@ class DoctorLeaveController extends Controller
         $user = auth()->user();
 
         // إذا كان المستخدم طبيباً، نلزم أن تكون الإجازة له حصراً بغض النظر عن المرسل
-        if (!$user->hasRole('admin', 'api')) {
+        if (! $user->hasRole('admin', 'api')) {
             $validated['doctor_id'] = $user->id;
         }
 
         $leave = DoctorLeave::create($validated);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'تم تسجيل الإجازة بنجاح',
-            'data'    => $leave->load('doctor:id,first_name,last_name,email')
+            'data' => $leave->load('doctor:id,first_name,last_name,email'),
         ], 201);
     }
 
@@ -60,8 +60,8 @@ class DoctorLeaveController extends Controller
         $leave->delete();
 
         return response()->json([
-            'status'  => 'success',
-            'message' => 'Doctor leave deleted successfully.'
+            'status' => 'success',
+            'message' => 'Doctor leave deleted successfully.',
         ], 200);
     }
 }

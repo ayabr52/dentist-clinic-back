@@ -8,8 +8,8 @@ use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Services\AppointmentService;
 use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
@@ -75,7 +75,7 @@ class AppointmentController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|in:' . implode(',', $allowedStatuses)
+            'status' => 'required|in:'.implode(',', $allowedStatuses),
         ]);
 
         $updated = $this->appointmentService->updateStatus($appointment, $request->status);

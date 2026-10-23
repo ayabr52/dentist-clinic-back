@@ -16,13 +16,13 @@ class MedicalRecordRequest extends FormRequest
     {
         return [
             'appointment_id' => ['required', 'exists:appointments,id'],
-            'patient_id'     => ['required', 'exists:users,id'],
-            'diagnosis'      => ['required', 'string'],
-            'prescription'   => ['nullable', 'string'], // أضيفت لمنع ضياع الوصفة الطبية
-            'doctor_notes'   => ['nullable', 'string'], // أضيفت لملاحظات الطبيب
-            'notes'          => ['nullable', 'string'],
-            'images'    => ['nullable', 'array', 'max:5'], // تحديد الحد الأقصى لعدد الملفات
-            'images.*'  => ['file', 'mimes:jpeg,png,jpg,pdf', 'max:5120'], // منع الملفات النصية مثل notes.txt وتحديد النوع والحجم (بحد أقصى 5 ميجابايت)
+            'patient_id' => ['required', 'exists:users,id'],
+            'diagnosis' => ['required', 'string'],
+            'prescription' => ['nullable', 'string'], // أضيفت لمنع ضياع الوصفة الطبية
+            'doctor_notes' => ['nullable', 'string'], // أضيفت لملاحظات الطبيب
+            'notes' => ['nullable', 'string'],
+            'images' => ['nullable', 'array', 'max:5'], // تحديد الحد الأقصى لعدد الملفات
+            'images.*' => ['file', 'mimes:jpeg,png,jpg,pdf', 'max:5120'], // منع الملفات النصية مثل notes.txt وتحديد النوع والحجم (بحد أقصى 5 ميجابايت)
         ];
     }
 
@@ -40,7 +40,7 @@ class MedicalRecordRequest extends FormRequest
 
                     // 2. التحقق من أن الطبيب الحالي هو نفس طبيب الموعد (إلا إذا كان Admin)
                     $user = auth()->user();
-                    if ($user && !$user->hasRole('admin', 'api') && (int) $appointment->doctor_id !== (int) $user->id) {
+                    if ($user && ! $user->hasRole('admin', 'api') && (int) $appointment->doctor_id !== (int) $user->id) {
                         $validator->errors()->add('appointment_id', 'غير مصرح لك بإضافة سجل طبي لموعد يخص طبيباً آخر.');
                     }
                 }

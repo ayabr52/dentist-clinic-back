@@ -2,19 +2,20 @@
 
 namespace App\Services;
 
+use App\Models\Appointment;
 use App\Models\Invoice;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Throwable;
 
 class PaymentService
 {
     /**
      * Create a new payment record for an invoice.
      *
-     * @param array $data The payment data including appointment_id (optional), invoice_id, amount, and payment_method.
+     * @param  array  $data  The payment data including appointment_id (optional), invoice_id, amount, and payment_method.
      * @return Payment The created Payment record.
+     *
      * @throws ValidationException If validation fails.
      */
     public function createPayment(array $data): Payment
@@ -23,11 +24,11 @@ class PaymentService
 
             // If appointment_id is provided, resolve the corresponding invoice_id automatically
             if (isset($data['appointment_id'])) {
-                $appointment = \App\Models\Appointment::with('invoice')->findOrFail($data['appointment_id']);
+                $appointment = Appointment::with('invoice')->findOrFail($data['appointment_id']);
 
-                if (!$appointment->invoice_id || !$appointment->invoice) {
+                if (! $appointment->invoice_id || ! $appointment->invoice) {
                     throw ValidationException::withMessages([
-                        'appointment_id' => ['This appointment is not linked to any financial invoice yet.']
+                        'appointment_id' => ['This appointment is not linked to any financial invoice yet.'],
                     ]);
                 }
 
@@ -45,28 +46,28 @@ class PaymentService
             $amountPaid = (float) $data['amount'];
 
             // Prevent float precision inaccuracies by scaling values into cents (integers)
-            $finalAmountCents   = (int) round(((float) $invoice->final_amount) * 100);
-            $paidAmountCents    = (int) round($amountPaid * 100);
-            $existingPaidCents  = (int) round(((float) $invoice->paid_amount) * 100);
+            $finalAmountCents = (int) round(((float) $invoice->final_amount) * 100);
+            $paidAmountCents = (int) round($amountPaid * 100);
+            $existingPaidCents = (int) round(((float) $invoice->paid_amount) * 100);
 
-            $remainingCents     = $finalAmountCents - $existingPaidCents;
+            $remainingCents = $finalAmountCents - $existingPaidCents;
 
             // Validate that the payment amount does not exceed the remaining balance
             if ($paidAmountCents > $remainingCents) {
                 $remainingAmountFormatted = number_format($remainingCents / 100, 2);
                 throw ValidationException::withMessages([
-                    'amount' => ['The paid amount (' . $amountPaid . ') exceeds the remaining balance on the invoice. Remaining balance: ' . $remainingAmountFormatted]
+                    'amount' => ['The paid amount ('.$amountPaid.') exceeds the remaining balance on the invoice. Remaining balance: '.$remainingAmountFormatted],
                 ]);
             }
 
             // Create the payment record
             /** @var Payment $payment */
             $payment = Payment::create([
-                'invoice_id'     => $invoice->id,
-                'patient_id'     => $invoice->patient_id,
-                'amount'         => $amountPaid,
+                'invoice_id' => $invoice->id,
+                'patient_id' => $invoice->patient_id,
+                'amount' => $amountPaid,
                 'payment_method' => $data['payment_method'] ?? 'cash',
-                'collected_by'   => $data['collected_by'] ?? auth()->id(),
+                'collected_by' => auth()->id(),
             ]);
 
             // Update the invoice's total paid amount accurately

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Api\V1;
 
-use App\Models\User;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -29,8 +29,8 @@ class ServiceTest extends TestCase
         $response = $this->getJson('/api/v1/services');
 
         $response->assertStatus(200)
-                 ->assertJsonCount(1, 'data') // لازم تظهر بس الخدمة المفعلة
-                 ->assertJsonFragment(['name' => 'فحص عام']);
+            ->assertJsonCount(1, 'data') // لازم تظهر بس الخدمة المفعلة
+            ->assertJsonFragment(['name' => 'فحص عام']);
     }
 
     public function test_admin_can_create_a_service()
@@ -47,14 +47,14 @@ class ServiceTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-                 ->assertJsonStructure([
-                     'status',
-                     'message',
-                     'data' => ['id', 'name', 'price']
-                 ]);
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'data' => ['id', 'name', 'price'],
+            ]);
 
         $this->assertDatabaseHas('services', [
-            'name' => 'تقويم أسنان'
+            'name' => 'تقويم أسنان',
         ]);
     }
 
@@ -65,7 +65,7 @@ class ServiceTest extends TestCase
 
         $service = Service::factory()->create([
             'name' => 'تنزيل جير',
-            'price' => 50000.00
+            'price' => 50000.00,
         ]);
 
         $response = $this->actingAs($admin)->putJson("/api/v1/services/{$service->id}", [
@@ -81,7 +81,7 @@ class ServiceTest extends TestCase
         $this->assertDatabaseHas('services', [
             'id' => $service->id,
             'name' => 'تنظيف وتلميع الأسنان',
-            'price' => 75000.00
+            'price' => 75000.00,
         ]);
     }
 }

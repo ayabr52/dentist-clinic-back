@@ -16,8 +16,8 @@ class Service extends Model
     public function doctors()
     {
         return $this->belongsToMany(User::class, 'doctor_services', 'service_id', 'doctor_id')
-                    ->withPivot('custom_price')
-                    ->withTimestamps();
+            ->withPivot('custom_price')
+            ->withTimestamps();
     }
 
     // المواعيد المرتبطة بهذه الخدمة

@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
-use App\Models\Service; // تأكدي من مسار الموديل الخاص بالخدمات
+use App\Models\Service;
+use App\Models\User; // تأكدي من مسار الموديل الخاص بالخدمات
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AppointmentFactory extends Factory

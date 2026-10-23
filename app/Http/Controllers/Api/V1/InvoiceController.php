@@ -11,8 +11,6 @@ class InvoiceController extends Controller
 {
     /**
      * Display a listing of all invoices.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -20,15 +18,12 @@ class InvoiceController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $invoices
+            'data' => $invoices,
         ]);
     }
 
     /**
      * Display the specified invoice details.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
     public function show(int $id): JsonResponse
     {
@@ -36,7 +31,7 @@ class InvoiceController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $invoice
+            'data' => $invoice,
         ]);
     }
 }

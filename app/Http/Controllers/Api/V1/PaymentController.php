@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Services\PaymentService;
 use App\Traits\ApiResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -25,8 +26,7 @@ class PaymentController extends Controller
     /**
      * Display a listing of the payments.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function index(Request $request)
     {
@@ -55,8 +55,7 @@ class PaymentController extends Controller
     /**
      * Store a newly created payment in storage.
      *
-     * @param StorePaymentRequest $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function store(StorePaymentRequest $request)
     {
@@ -71,8 +70,7 @@ class PaymentController extends Controller
     /**
      * Display the specified payment.
      *
-     * @param Payment $payment
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function show(Payment $payment)
     {
@@ -87,9 +85,7 @@ class PaymentController extends Controller
     /**
      * Update the specified payment status.
      *
-     * @param UpdatePaymentStatusRequest $request
-     * @param Payment $payment
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function updateStatus(UpdatePaymentStatusRequest $request, Payment $payment)
     {
@@ -107,8 +103,7 @@ class PaymentController extends Controller
     /**
      * Remove the specified payment from storage.
      *
-     * @param Payment $payment
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function destroy(Payment $payment)
     {

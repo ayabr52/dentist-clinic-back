@@ -10,14 +10,14 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'             => $this->id,
-            'first_name'     => $this->first_name,
-            'last_name'      => $this->last_name,
-            'email'          => $this->email,
-            'phone'          => $this->phone,
+            'id' => $this->id,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'email' => $this->email,
+            'phone' => $this->phone,
             'specialization' => $this->specialization,
-            'roles'          => $this->getRoleNames(),            // مصفوفة بأسماء الأدوار فقط مثل ["patient"]
-            'permissions'    => $this->getAllPermissions()->pluck('name'), // مصفوفة بأسماء الصلاحيات المباشرة والمكتسبة من الأدوار
+            'roles' => $this->getRoleNames(),            // مصفوفة بأسماء الأدوار فقط مثل ["patient"]
+            'permissions' => $this->getAllPermissions()->pluck('name'), // مصفوفة بأسماء الصلاحيات المباشرة والمكتسبة من الأدوار
         ];
     }
 }

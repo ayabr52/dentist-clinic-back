@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::table('appointments', function (Blueprint $table) {
+        Schema::table('appointments', function (Blueprint $table) {
             // إضافة حقل وقت النهاية بعد حقل وقت البداية
             $table->time('end_time')->after('start_time')->nullable();
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-       Schema::table('appointments', function (Blueprint $table) {
+        Schema::table('appointments', function (Blueprint $table) {
             $table->dropColumn('end_time');
         });
     }

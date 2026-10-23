@@ -39,12 +39,12 @@ class AuthTest extends TestCase
                 'message',
                 'data' => [
                     'user',
-                    'token'
-                ]
+                    'token',
+                ],
             ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'aya@example.com'
+            'email' => 'aya@example.com',
         ]);
     }
 
@@ -68,8 +68,8 @@ class AuthTest extends TestCase
                 'message',
                 'data' => [
                     'user',
-                    'token'
-                ]
+                    'token',
+                ],
             ]);
     }
 }

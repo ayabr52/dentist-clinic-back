@@ -11,7 +11,7 @@ class DoctorLeavePolicy
     {
         return $user->hasRole('admin', 'api') || $user->hasRole('doctor', 'api');
     }
-    
+
     public function update(User $user, DoctorLeave $leave): bool
     {
         return $user->hasRole('admin', 'api') || $user->id === $leave->doctor_id;

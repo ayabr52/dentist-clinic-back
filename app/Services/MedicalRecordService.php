@@ -17,16 +17,16 @@ class MedicalRecordService
 
                 /** @var MedicalRecord $record */
                 $record = MedicalRecord::create([
-                    'patient_id'         => $data['patient_id'],
-                    'doctor_id'          => $doctorId,
-                    'appointment_id'     => $data['appointment_id'] ?? null,
-                    'diagnosis'          => $data['diagnosis'],
-                    'prescription'       => $data['prescription'] ?? null,
-                    'doctor_notes'       => $data['doctor_notes'] ?? ($data['notes'] ?? null), // دعم كلا الاسمين لمنع ضياع الملاحظات
+                    'patient_id' => $data['patient_id'],
+                    'doctor_id' => $doctorId,
+                    'appointment_id' => $data['appointment_id'] ?? null,
+                    'diagnosis' => $data['diagnosis'],
+                    'prescription' => $data['prescription'] ?? null,
+                    'doctor_notes' => $data['doctor_notes'] ?? ($data['notes'] ?? null), // دعم كلا الاسمين لمنع ضياع الملاحظات
                     'ai_analysis_result' => $data['ai_analysis_result'] ?? null,
                 ]);
 
-                if (!empty($images)) {
+                if (! empty($images)) {
                     foreach ($images as $imageFile) {
                         // تخزين الملف على قرص خاص (local) بدلاً من public لحمايته من الوصول المباشر
                         $path = $imageFile->store('medical_records', 'local');
@@ -37,7 +37,7 @@ class MedicalRecordService
                         $record->images()->create([
                             'image_path' => $path,
                             'image_type' => $data['image_type'] ?? 'xray',
-                            'title'      => $data['image_title'] ?? null,
+                            'title' => $data['image_title'] ?? null,
                         ]);
                     }
                 }

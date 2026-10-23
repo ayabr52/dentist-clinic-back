@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\RegisterRequest;
-use App\Http\Requests\Api\V1\LoginRequest; // لو أنشأتيه بنفس الطريقة
+use App\Http\Requests\Api\V1\LoginRequest;
+use App\Http\Requests\Api\V1\RegisterRequest; // لو أنشأتيه بنفس الطريقة
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'تم إنشاء الحساب بنجاح',
-            'data' => $result
+            'data' => $result,
         ], 201);
     }
 
@@ -36,14 +36,14 @@ class AuthController extends Controller
         if (! $result) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'بيانات الاعتماد غير صحيحة'
+                'message' => 'بيانات الاعتماد غير صحيحة',
             ], 401);
         }
 
         return response()->json([
             'status' => 'success',
             'message' => 'تم تسجيل الدخول بنجاح',
-            'data' => $result
+            'data' => $result,
         ]);
     }
 
@@ -58,7 +58,7 @@ class AuthController extends Controller
         // 2. إرجاعها منسقة ونظيفة عبر الـ Resource
         return response()->json([
             'status' => 'success',
-            'data'   => new UserResource($user)
+            'data' => new UserResource($user),
         ]);
     }
 
@@ -68,7 +68,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'تم تسجيل الخروج بنجاح'
+            'message' => 'تم تسجيل الخروج بنجاح',
         ]);
     }
 
@@ -82,8 +82,8 @@ class AuthController extends Controller
         $this->authService->deleteUser($user);
 
         return response()->json([
-            'status'  => 'success',
-            'message' => 'تم حذف وتجميد حسابك بنجاح'
+            'status' => 'success',
+            'message' => 'تم حذف وتجميد حسابك بنجاح',
         ]);
     }
 }
