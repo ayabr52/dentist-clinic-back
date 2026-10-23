@@ -29,7 +29,18 @@ class DoctorLeaveController extends Controller
 
     public function store(StoreDoctorLeaveRequest $request)
     {
-        $leave = DoctorLeave::create($request->validated());
+        // التحقق من صلاحية الإنشاء عبر الـ Policy
+        $this->authorize('create', DoctorLeave::class);
+
+        $validated = $request->validated();
+        $user = auth()->user();
+
+        // إذا كان المستخدم طبيباً، نلزم أن تكون الإجازة له حصراً بغض النظر عن المرسل
+        if (!$user->hasRole('admin', 'api')) {
+            $validated['doctor_id'] = $user->id;
+        }
+
+        $leave = DoctorLeave::create($validated);
 
         return response()->json([
             'status'  => 'success',
@@ -38,22 +49,16 @@ class DoctorLeaveController extends Controller
         ], 201);
     }
 
-    public function destroy($id)
+    public function destroy(DoctorLeave $leave)
     {
-        $leave = DoctorLeave::find($id);
-
-        if (!$leave) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'الإجازة غير موجودة'
-            ], 404);
-        }
+        // Authorize using DoctorLeavePolicy
+        $this->authorize('delete', $leave);
 
         $leave->delete();
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'تم حذف الإجازة بنجاح'
-        ]);
+            'message' => 'Doctor leave deleted successfully.'
+        ], 200);
     }
 }

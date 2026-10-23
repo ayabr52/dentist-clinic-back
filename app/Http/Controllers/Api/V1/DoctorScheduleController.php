@@ -64,25 +64,28 @@ class DoctorScheduleController extends Controller
     }
 
     /**
-     * حذف موعد محدد من جدول دوام الطبيب
+     * Remove the specified doctor schedule.
+     *
+     * @param DoctorSchedule $schedule Matches the route parameter {schedule}
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(DoctorSchedule $doctorSchedule)
+    public function destroy(DoctorSchedule $schedule)
     {
         $user = auth()->user();
 
-        // فحص الملكية عند الحذف
-        if (!$user->hasRole('admin', 'api') && $user->id !== $doctorSchedule->doctor_id) {
+        // Verify ownership or admin role
+        if (!$user->hasRole('admin', 'api') && $user->id !== $schedule->doctor_id) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'عذراً، غير مصرح لك بحذف جدول دوام طبيب آخر.'
+                'message' => 'Unauthorized to delete this schedule.'
             ], 403);
         }
 
-        $doctorSchedule->delete();
+        $schedule->delete();
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'تم حذف موعد الدوام بنجاح.'
+            'message' => 'Schedule deleted successfully.'
         ], 200);
     }
 }
