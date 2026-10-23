@@ -27,7 +27,17 @@ class DoctorScheduleController extends Controller
     public function store(StoreDoctorScheduleRequest $request)
     {
         $validated = $request->validated();
-        $doctorId = $validated['doctor_id'];
+        $doctorId = (int) $validated['doctor_id'];
+        $user = auth()->user();
+
+        // فحص الملكية: منع الطبيب من إضافة أو تعديل جدول طبيب آخر إلا إذا كان Admin
+        if (!$user->hasRole('admin', 'api') && $user->id !== $doctorId) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'عذراً، غير مصرح لك بتعديل جدول دوام طبيب آخر.'
+            ], 403);
+        }
+
         $savedSchedules = [];
 
         DB::transaction(function () use ($validated, $doctorId, &$savedSchedules) {
@@ -51,5 +61,28 @@ class DoctorScheduleController extends Controller
             'message' => 'تم حفظ جدول أوقات العمل بنجاح',
             'data'    => $savedSchedules
         ], 201);
+    }
+
+    /**
+     * حذف موعد محدد من جدول دوام الطبيب
+     */
+    public function destroy(DoctorSchedule $doctorSchedule)
+    {
+        $user = auth()->user();
+
+        // فحص الملكية عند الحذف
+        if (!$user->hasRole('admin', 'api') && $user->id !== $doctorSchedule->doctor_id) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'عذراً، غير مصرح لك بحذف جدول دوام طبيب آخر.'
+            ], 403);
+        }
+
+        $doctorSchedule->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم حذف موعد الدوام بنجاح.'
+        ], 200);
     }
 }

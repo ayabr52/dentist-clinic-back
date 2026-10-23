@@ -16,7 +16,7 @@ class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $invoices = Invoice::with(['patient', 'appointment', 'payments'])->latest()->paginate(10);
+        $invoices = Invoice::with(['patient', 'appointments', 'payments'])->latest()->paginate(10);
 
         return response()->json([
             'status' => 'success',
@@ -32,7 +32,7 @@ class InvoiceController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $invoice = Invoice::with(['patient', 'appointment', 'payments.collector'])->findOrFail($id);
+        $invoice = Invoice::with(['patient', 'appointments', 'payments.collector'])->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
