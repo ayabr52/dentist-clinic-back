@@ -17,7 +17,7 @@ class AppointmentResource extends JsonResource
             'status' => $this->status,
             'notes' => $this->notes,
             // دمج العلاقات بشكل نظيف ومحدد الحقول
-            'patient' => new UserResource($this->whenLoaded('patient')),
+            'patient_id' => $this->patient_id,
             'doctor' => new UserResource($this->whenLoaded('doctor')),
             'service' => new ServiceResource($this->whenLoaded('service')),
             'invoice' => new InvoiceResource($this->whenLoaded('invoice')),

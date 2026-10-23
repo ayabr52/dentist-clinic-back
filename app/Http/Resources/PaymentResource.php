@@ -15,6 +15,8 @@ class PaymentResource extends JsonResource
             'payment_method' => $this->payment_method, // cash, card, etc.
             'collected_by' => new UserResource($this->whenLoaded('collector')),
             'created_at' => $this->created_at?->toIso8601String(),
+            'status' => $this->status,
+            'final_amount' => $this->final_amount,
         ];
     }
 }

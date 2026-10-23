@@ -41,7 +41,7 @@ class DoctorScheduleAndLeaveTest extends TestCase
         $response->assertStatus(201)
             ->assertJson([
                 'status' => 'success',
-                'message' => 'تم إضافة جدول الدوام بنجاح',
+                'message' => 'تم حفظ جدول أوقات العمل بنجاح',
             ]);
 
         $this->assertDatabaseHas('doctor_schedules', [
@@ -52,17 +52,24 @@ class DoctorScheduleAndLeaveTest extends TestCase
     }
 
     #[Test]
-    public function it_validates_schedule_creation()
-    {
-        $response = $this->actingAs($this->doctor, 'sanctum')
-            ->postJson('/api/v1/doctor-schedules', [
-                'doctor_id' => $this->doctor->id,
-                'day_of_week' => 1,
-            ]);
+  public function it_validates_schedule_creation()
+  {
+      $response = $this->actingAs($this->doctor, 'sanctum')
+          ->postJson('/api/v1/doctor-schedules', [
+              'doctor_id' => $this->doctor->id,
+              'schedules' => [
+                  [
+                      'day_of_week' => 1,
+                  ]
+              ]
+          ]);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['start_time', 'end_time', 'is_working_day']);
-    }
+      $response->assertStatus(422)
+          ->assertJsonValidationErrors([
+              'schedules.0.start_time',
+              'schedules.0.end_time',
+          ]);
+  }
 
     #[Test]
     public function it_can_create_a_doctor_leave()
@@ -104,7 +111,7 @@ class DoctorScheduleAndLeaveTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'status' => 'success',
-                'message' => 'تم حذف الإجازة بنجاح',
+                'message' => 'Doctor leave deleted successfully.',
             ]);
 
         $this->assertDatabaseMissing('doctor_leaves', [

@@ -13,16 +13,9 @@ class PaymentService
     /**
      * Create a new payment record for an invoice.
      *
-     * This method handles the creation of a payment, validates that the amount does not exceed
-     * the remaining balance on the invoice (using cent-based integer calculations to prevent float precision bugs),
-     * and updates the invoice's paid amount and status.
-     * It uses DB::transaction to ensure data consistency and lockForUpdate on the invoice
-     * to prevent race conditions when multiple payments are attempted simultaneously.
-     *
      * @param array $data The payment data including appointment_id (optional), invoice_id, amount, and payment_method.
-     * @return Payment The created Payment record, loaded with invoice, patient, and collector relationships.
-     * @throws ValidationException If appointment_id is invalid or amount exceeds remaining balance.
-     * @throws \Exception If database transaction fails or invoice not found.
+     * @return Payment The created Payment record.
+     * @throws ValidationException If validation fails.
      */
     public function createPayment(array $data): Payment
     {
@@ -51,7 +44,7 @@ class PaymentService
 
             $amountPaid = (float) $data['amount'];
 
-            // Prevent float precision inaccuracies (e.g. 0.30 - 0.10 != 0.20) by scaling values into cents (integers)
+            // Prevent float precision inaccuracies by scaling values into cents (integers)
             $finalAmountCents   = (int) round(((float) $invoice->final_amount) * 100);
             $paidAmountCents    = (int) round($amountPaid * 100);
             $existingPaidCents  = (int) round(((float) $invoice->paid_amount) * 100);
@@ -73,7 +66,7 @@ class PaymentService
                 'patient_id'     => $invoice->patient_id,
                 'amount'         => $amountPaid,
                 'payment_method' => $data['payment_method'] ?? 'cash',
-                'collected_by'   => auth()->id(),
+                'collected_by'   => $data['collected_by'] ?? auth()->id(),
             ]);
 
             // Update the invoice's total paid amount accurately
@@ -95,29 +88,14 @@ class PaymentService
 
     /**
      * Retrieve a specific payment record along with its related details.
-     *
-     * This method fetches a payment instance by its ID and includes related models such as
-     * the associated invoice, patient, appointments, and collector.
-     *
-     * @param int $paymentId The ID of the payment record to retrieve.
-     * @return \App\Models\Payment The payment instance with loaded relations.
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the payment with the given ID is not found.
      */
     public function getPaymentDetails(int $paymentId): Payment
     {
-        // Using 'appointments' (plural) to match the exact relationship definition in Invoice model
         return Payment::with(['invoice.patient', 'invoice.appointments', 'collector'])->findOrFail($paymentId);
     }
 
     /**
      * Retrieve a list of payments associated with a specific invoice.
-     *
-     * This method queries the Payment model to fetch all payments that are linked
-     * to the provided invoice ID. The results are ordered by the creation date in
-     * descending order and include the associated collector information.
-     *
-     * @param int $invoiceId The ID of the invoice for which to retrieve payments.
-     * @return \Illuminate\Database\Eloquent\Collection A collection of Payment models.
      */
     public function getInvoicePayments(int $invoiceId)
     {
@@ -125,5 +103,17 @@ class PaymentService
             ->with(['collector'])
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Updates the status of a given payment.
+     */
+    public function updateStatus(Payment $payment, string $status)
+    {
+        $payment->update([
+            'status' => $status,
+        ]);
+
+        return $payment->fresh();
     }
 }

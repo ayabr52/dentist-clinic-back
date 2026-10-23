@@ -83,7 +83,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/payments', [PaymentController::class, 'index']);
             Route::post('/payments', [PaymentController::class, 'store']);
             Route::get('/payments/{id}', [PaymentController::class, 'show']);
-
+            Route::patch('/payments/{payment}/status', [PaymentController::class, 'updateStatus']);
             // Services Administration (CRUD)
             Route::post('/services', [ServiceController::class, 'store']);
             Route::put('/services/{service}', [ServiceController::class, 'update']);
@@ -96,6 +96,5 @@ Route::prefix('v1')->group(function () {
             // User Administration
             Route::delete('/users/{user}', [AuthController::class, 'destroy']);
         });
-
     });
 });

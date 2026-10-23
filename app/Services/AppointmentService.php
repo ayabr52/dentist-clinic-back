@@ -73,13 +73,16 @@ class AppointmentService
             // ج. التحقق الحقيقي من التداخل الزمني (Overlap Validation) مع lockForUpdate
             $isConflicting = Appointment::where('doctor_id', $doctorId)
                 ->where('appointment_date', $appointmentDate)
-                ->where('status', '!=', 'cancelled') // نتجاهل المواعيد الملغاة
-                ->where(function ($query) use ($startTime, $endTime) {
-                    // معادلة تقاطع الفترات الزمنية الصحيحة
-                    $query->where('start_time', '<', $endTime->format('H:i'))
-                          ->where('end_time', '>', $startTime->format('H:i'));
+                ->where('status', '!=', 'cancelled')
+                ->where(function ($query) use ($startTimeString, $startTime, $endTime) {
+                    // التحقق من تطابق وقت البداية تماماً أو تقاطع الفترات
+                    $query->where('start_time', $startTimeString)
+                          ->orWhere(function ($q) use ($startTime, $endTime) {
+                              $q->where('start_time', '<', $endTime->format('H:i'))
+                                ->where('end_time', '>', $startTime->format('H:i'));
+                          });
                 })
-                ->lockForUpdate() // منع أي حجز متزامن في نفس اللحظة لنفس الطبيب
+                ->lockForUpdate()
                 ->exists();
 
             if ($isConflicting) {

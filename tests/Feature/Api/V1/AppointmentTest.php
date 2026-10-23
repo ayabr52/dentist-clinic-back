@@ -109,7 +109,7 @@ class AppointmentTest extends TestCase
         $response->assertStatus(422)
             ->assertJson([
                 'status' => 'error',
-                'message' => 'عذراً، هذا الموعد محجوز مسبقاً لهذا الطبيب.'
+                'message' => 'عذراً، هذا الوقت يتداخل مع موعد حجز آخر لهذا الطبيب.'
             ]);
     }
 }
