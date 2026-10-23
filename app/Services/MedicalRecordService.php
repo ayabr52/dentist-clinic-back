@@ -21,7 +21,6 @@ class MedicalRecordService
                     'doctor_id'          => $doctorId,
                     'appointment_id'     => $data['appointment_id'] ?? null,
                     'diagnosis'          => $data['diagnosis'],
-                    'treatment'          => $data['treatment'] ?? null,
                     'prescription'       => $data['prescription'] ?? null,
                     'doctor_notes'       => $data['doctor_notes'] ?? ($data['notes'] ?? null), // دعم كلا الاسمين لمنع ضياع الملاحظات
                     'ai_analysis_result' => $data['ai_analysis_result'] ?? null,

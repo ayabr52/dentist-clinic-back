@@ -18,12 +18,11 @@ class MedicalRecordRequest extends FormRequest
             'appointment_id' => ['required', 'exists:appointments,id'],
             'patient_id'     => ['required', 'exists:users,id'],
             'diagnosis'      => ['required', 'string'],
-            'treatment'      => ['nullable', 'string'],
             'prescription'   => ['nullable', 'string'], // أضيفت لمنع ضياع الوصفة الطبية
             'doctor_notes'   => ['nullable', 'string'], // أضيفت لملاحظات الطبيب
             'notes'          => ['nullable', 'string'],
-            'attachments'    => ['nullable', 'array', 'max:5'], // تحديد الحد الأقصى لعدد الملفات
-            'attachments.*'  => ['file', 'mimes:jpeg,png,jpg,pdf', 'max:5120'], // منع الملفات النصية مثل notes.txt وتحديد النوع والحجم (بحد أقصى 5 ميجابايت)
+            'images'    => ['nullable', 'array', 'max:5'], // تحديد الحد الأقصى لعدد الملفات
+            'images.*'  => ['file', 'mimes:jpeg,png,jpg,pdf', 'max:5120'], // منع الملفات النصية مثل notes.txt وتحديد النوع والحجم (بحد أقصى 5 ميجابايت)
         ];
     }
 

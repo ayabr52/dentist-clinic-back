@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreDoctorLeaveRequest;
 use App\Models\DoctorLeave;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 
 class DoctorLeaveController extends Controller
 {
+    use AuthorizesRequests;
+    
     public function index(Request $request)
     {
         $query = DoctorLeave::with(['doctor' => function ($q) {
