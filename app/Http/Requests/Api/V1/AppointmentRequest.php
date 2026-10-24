@@ -30,6 +30,11 @@ class AppointmentRequest extends FormRequest
      */
     public function withValidator($validator)
     {
+        // إذا فشلت القواعد الأساسية أصلاً، نتوقف فوراً لتجنب أي أخطاء سيرفر 500
+        if ($validator->fails()) {
+            return;
+        }
+
         $validator->after(function ($validator) {
             $doctorId = $this->doctor_id;
             $dateString = $this->appointment_date;
@@ -39,7 +44,7 @@ class AppointmentRequest extends FormRequest
                 return;
             }
 
-            // تحويل تاريخ الموعد إلى كائن Carbon لمعرفة يوم الأسبوع
+            // تحويل تاريخ الموعد إلى كائن Carbon بمعرفة يوم الأسبوع
             $date = Carbon::parse($dateString);
             $dayOfWeek = $date->dayOfWeek; // يعطي رقماً من 0 (الأحد) إلى 6 (السبت)
 
@@ -55,7 +60,7 @@ class AppointmentRequest extends FormRequest
                 return;
             }
 
-            // 2. التحقق هل الطبيب لديه دوام مسجل في هذا اليوم من الأسبوع (طابقنا الرقم مع day_of_week)
+            // 2. التحقق هل الطبيب لديه دوام مسجل في هذا اليوم من الأسبوع
             $schedule = DoctorSchedule::where('doctor_id', $doctorId)
                 ->where('day_of_week', $dayOfWeek)
                 ->where('is_working_day', true)
@@ -69,7 +74,10 @@ class AppointmentRequest extends FormRequest
 
             // 3. التحقق هل وقت الموعد يقع ضمن ساعات دوام الطبيب في هذا اليوم؟
             if ($startTime < $schedule->start_time || $startTime > $schedule->end_time) {
-                $validator->errors()->add('start_time', "وقت الموعد خارج ساعات الدوام المتاحة للطبيب لهذا اليوم ({$schedule->start_time} - {$schedule->end_time}).");
+                $validator->errors()->add(
+                    'start_time',
+                    "وقت الموعد خارج ساعات الدوام المتاحة للطبيب لهذا اليوم ({$schedule->start_time} إلى {$schedule->end_time})."
+                );
             }
         });
     }

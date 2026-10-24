@@ -12,6 +12,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PaymentController extends Controller
 {
@@ -27,30 +28,37 @@ class PaymentController extends Controller
     /**
      * Display a listing of the payments.
      *
-     * @return JsonResponse
+     * @return AnonymousResourceCollection
      */
     public function index(Request $request)
     {
         $user = $request->user();
         $query = Payment::with(['invoice.appointments', 'invoice.patient', 'collector']);
 
-        // إذا كان المستخدم مريضاً، جلب فواتيره الخاصة حصراً بناءً على دوره
+        // إذا كان المستخدم مريضاً، جلب دفعاته عبر علاقة الفاتورة حصراً
         if ($user->hasRole('patient')) {
-            $query->where('patient_id', $user->id);
+            $query->whereHas('invoice', function ($q) use ($user) {
+                $q->where('patient_id', $user->id);
+            });
         } else {
-            // للأدمن أو الطبيب: السماح بالفلترة حسب الـ patient_id إن وجد
-            if ($request->has('patient_id')) {
-                $query->where('patient_id', $request->patient_id);
+            // للأدمن أو الطبيب: الفلترة حسب الـ patient_id عبر علاقة الفاتورة إن وجد
+            if ($request->filled('patient_id')) {
+                $query->whereHas('invoice', function ($q) use ($request) {
+                    $q->where('patient_id', $request->patient_id);
+                });
             }
         }
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+        // الفلترة حسب الحالة تتم عبر علاقة الفاتورة لأنها موجودة في invoices وليس payments
+        if ($request->filled('status')) {
+            $query->whereHas('invoice', function ($q) use ($request) {
+                $q->where('status', $request->status);
+            });
         }
 
-        $payments = $query->get();
+        $payments = $query->latest()->paginate(10);
 
-        return $this->successResponse($payments, 'تم جلب الدفعات المالية بنجاح');
+        return PaymentResource::collection($payments);
     }
 
     /**
@@ -68,7 +76,7 @@ class PaymentController extends Controller
         return $this->successResponse($payment, 'تم إنشاء عملية الدفع بنجاح', 201);
     }
 
-  /**
+    /**
      * Display the specified payment.
      *
      * @return JsonResponse

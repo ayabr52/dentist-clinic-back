@@ -16,8 +16,8 @@ class PaymentResource extends JsonResource
 
             // جلب حالة الفاتورة والمبلغ الإ النهائي من علاقة invoice بشكل آمن
             'invoice_id' => $this->invoice_id,
-            'invoice_status' => $this->whenLoaded('invoice', fn() => $this->invoice->status),
-            'final_amount' => $this->whenLoaded('invoice', fn() => $this->invoice->final_amount),
+            'invoice_status' => $this->whenLoaded('invoice', fn () => $this->invoice->status),
+            'final_amount' => $this->whenLoaded('invoice', fn () => $this->invoice->final_amount),
 
             'collected_by' => new UserResource($this->whenLoaded('collector')),
             'created_at' => $this->created_at?->toIso8601String(),

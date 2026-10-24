@@ -29,22 +29,28 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request) // أو LoginRequest
+    public function login(LoginRequest $request)
     {
-        $result = $this->authService->login($request->only('email', 'password'));
+        $credentials = $request->validated();
 
-        if (! $result) {
+        if (! auth()->attempt($credentials)) {
             return response()->json([
-                'status' => 'error',
+                'status' => false,
                 'message' => 'بيانات الاعتماد غير صحيحة',
             ], 401);
         }
 
+        $user = auth()->user();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
-            'status' => 'success',
+            'status' => true,
             'message' => 'تم تسجيل الدخول بنجاح',
-            'data' => $result,
-        ]);
+            'data' => [
+                'user' => $user,
+                'token' => $token,
+            ],
+        ], 200);
     }
 
     /**

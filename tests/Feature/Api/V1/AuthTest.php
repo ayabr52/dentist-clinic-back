@@ -52,7 +52,7 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'test@example.com',
-            'password' => bcrypt('password123'),
+            'password' => 'password123',
         ]);
 
         $user->assignRole('patient');
