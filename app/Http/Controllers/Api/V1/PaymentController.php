@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StorePaymentRequest;
 use App\Http\Requests\Api\V1\UpdatePaymentStatusRequest;
+use App\Http\Resources\PaymentResource;
 use App\Models\Payment;
 use App\Services\PaymentService;
 use App\Traits\ApiResponse;
@@ -67,18 +68,19 @@ class PaymentController extends Controller
         return $this->successResponse($payment, 'تم إنشاء عملية الدفع بنجاح', 201);
     }
 
-    /**
+  /**
      * Display the specified payment.
      *
      * @return JsonResponse
      */
     public function show(Payment $payment)
     {
-        // $this->authorize('view', $payment);
+        // تفعيل التحقق من الصلاحية أمنياً
+        $this->authorize('view', $payment);
 
-        return $this->successResponse(
-            $payment->load(['invoice.appointments', 'invoice.patient', 'collector']),
-            'تم جلب تفاصيل الدفع بنجاح'
+        // استخدام Resource لتنظيم هيكل الـ JSON المعادة
+        return new PaymentResource(
+            $payment->load(['invoice.appointments', 'invoice.patient', 'collector'])
         );
     }
 

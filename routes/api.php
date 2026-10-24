@@ -78,7 +78,7 @@ Route::prefix('v1')->group(function () {
             // Payments Management
             Route::get('/payments', [PaymentController::class, 'index']);
             Route::post('/payments', [PaymentController::class, 'store']);
-            Route::get('/payments/{id}', [PaymentController::class, 'show']);
+            Route::get('/payments/{payment}', [PaymentController::class, 'show']);
             Route::patch('/payments/{payment}/status', [PaymentController::class, 'updateStatus']);
             // Services Administration (CRUD)
             Route::post('/services', [ServiceController::class, 'store']);

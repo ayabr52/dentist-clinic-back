@@ -14,7 +14,7 @@ class ServiceResource extends JsonResource
             'name' => $this->name ?? null,
             'description' => $this->description ?? null,
             'price' => $this->price ?? 0.00,
-            'duration' => $this->duration ?? null, // المدة بالدقائق
+            'duration_minutes' => $this->duration_minutes ?? null, // المدة بالدقائق
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
