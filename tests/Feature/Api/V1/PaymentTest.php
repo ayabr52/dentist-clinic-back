@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Appointment;
 use App\Models\Invoice;
-use App\Models\Payment;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,52 +52,29 @@ class PaymentTest extends TestCase
     }
 
     #[Test]
-    public function it_can_create_payment_record()
+    public function it_can_create_payment_record_and_update_invoice_status()
     {
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/payments', [
                 'appointment_id' => $this->appointment->id,
-                'invoice_id' => $this->invoice->id,
-                'patient_id' => $this->user->id,
                 'amount' => 150.00,
-                'discount' => 20.00,
-                'final_amount' => 130.00,
                 'payment_method' => 'cash',
-                'status' => 'pending',
-                'collected_by' => $this->user->id,
             ]);
 
         $response->assertStatus(201);
 
+        // التحقق من إنشاء سجل الدفع في جدول payments بالأعمدة الحقيقية فقط
         $this->assertDatabaseHas('payments', [
-            'appointment_id' => $this->appointment->id,
-        ]);
-    }
-
-    #[Test]
-    public function it_can_update_payment_status()
-    {
-        $payment = Payment::create([
-            'appointment_id' => $this->appointment->id,
             'invoice_id' => $this->invoice->id,
-            'patient_id' => $this->user->id,
-            'amount' => 100.00,
-            'discount' => 0.00,
-            'final_amount' => 100.00,
-            'status' => 'pending',
+            'amount' => 150.00,
             'payment_method' => 'cash',
             'collected_by' => $this->user->id,
         ]);
 
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->patchJson("/api/v1/payments/{$payment->id}/status", [
-                'status' => 'paid',
-            ]);
-
-        $response->assertStatus(200);
-
-        $this->assertDatabaseHas('payments', [
-            'id' => $payment->id,
+        // التحقق من تحديث رصيد وحالة الفاتورة المرتبطة بها تلقائياً
+        $this->assertDatabaseHas('invoices', [
+            'id' => $this->invoice->id,
+            'paid_amount' => 150.00,
             'status' => 'paid',
         ]);
     }
