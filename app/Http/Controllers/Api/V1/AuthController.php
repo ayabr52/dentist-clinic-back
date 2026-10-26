@@ -35,7 +35,7 @@ class AuthController extends Controller
 
         if (! auth()->attempt($credentials)) {
             return response()->json([
-                'status' => false,
+                'success' => false,
                 'message' => 'بيانات الاعتماد غير صحيحة',
             ], 401);
         }
@@ -44,7 +44,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'message' => 'تم تسجيل الدخول بنجاح',
             'data' => [
                 'user' => $user,

@@ -32,7 +32,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/services/{service_id}/doctors', [DoctorServiceController::class, 'getDoctorsByService']);
     Route::get('/doctors/{doctor_id}/services', [DoctorServiceController::class, 'getDoctorServices']);
     Route::get('/doctors', [DoctorServiceController::class, 'index']);
-
+    Route::get('/doctors/{doctor}/available-slots', [DoctorScheduleController::class, 'getAvailableSlots']);
     /**
      * Protected Routes (Sanctum)
      */

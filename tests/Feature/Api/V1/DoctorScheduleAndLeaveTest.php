@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\DoctorSchedule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -117,5 +118,46 @@ class DoctorScheduleAndLeaveTest extends TestCase
         $this->assertDatabaseMissing('doctor_leaves', [
             'id' => $leaveId,
         ]);
+    }
+
+    public function test_can_get_available_slots_for_doctor()
+    {
+        $doctor = User::factory()->create();
+        $doctor->assignRole('doctor');
+
+        // اختيار يوم غد للتأكد من اجتياز شرط after_or_equal:today
+        $tomorrow = now()->addDay();
+        $dayOfWeek = $tomorrow->dayOfWeek;
+
+        // إنشاء جدول دوام للطبيب في هذا اليوم
+        DoctorSchedule::create([
+            'doctor_id' => $doctor->id,
+            'day_of_week' => $dayOfWeek,
+            'start_time' => '09:00:00',
+            'end_time' => '11:00:00',
+            'is_working_day' => true,
+        ]);
+
+        $response = $this->getJson("/api/v1/doctors/{$doctor->id}/available-slots?date=".$tomorrow->toDateString());
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ])
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data',
+            ]);
+    }
+
+    public function test_validate_date_is_required_for_available_slots()
+    {
+        $doctor = User::factory()->create();
+        $doctor->assignRole('doctor');
+
+        $response = $this->getJson("/api/v1/doctors/{$doctor->id}/available-slots");
+
+        $response->assertStatus(422); // يجب أن يعود بخطأ تحقق لأن التاريخ مفقود
     }
 }
