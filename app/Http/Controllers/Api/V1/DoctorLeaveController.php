@@ -24,10 +24,7 @@ class DoctorLeaveController extends Controller
             $query->where('doctor_id', $request->doctor_id);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $query->get(),
-        ]);
+        return response()->success($query->get(), 'تم جلب قائمة الإجازات بنجاح');
     }
 
     public function store(StoreDoctorLeaveRequest $request)
@@ -45,11 +42,11 @@ class DoctorLeaveController extends Controller
 
         $leave = DoctorLeave::create($validated);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم تسجيل الإجازة بنجاح',
-            'data' => $leave->load('doctor:id,first_name,last_name,email'),
-        ], 201);
+        return response()->success(
+            $leave->load('doctor:id,first_name,last_name,email'),
+            'تم تسجيل الإجازة بنجاح',
+            201
+        );
     }
 
     public function destroy(DoctorLeave $leave)
@@ -59,9 +56,6 @@ class DoctorLeaveController extends Controller
 
         $leave->delete();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Doctor leave deleted successfully.',
-        ], 200);
+        return response()->success(null, 'Doctor leave deleted successfully.');
     }
 }

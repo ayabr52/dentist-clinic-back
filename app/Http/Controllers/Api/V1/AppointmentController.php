@@ -7,44 +7,61 @@ use App\Http\Requests\Api\V1\AppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Services\AppointmentService;
-use App\Traits\ApiResponse;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * @class AppointmentController
+ */
 class AppointmentController extends Controller
 {
-    use ApiResponse, AuthorizesRequests;
+    use AuthorizesRequests;
 
     protected AppointmentService $appointmentService;
 
+    /**
+     * إنشاء مثيل جديد من الكونترولر وحقن خدمة المواعيد.
+     */
     public function __construct(AppointmentService $appointmentService)
     {
         $this->appointmentService = $appointmentService;
     }
 
-    public function index(Request $request)
+    /**
+     * جلب قائمة المواعيد مع الترقيم والفلترة بناءً على دور المستخدم الحالي.
+     *
+     * @throws AuthorizationException
+     */
+    public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Appointment::class);
 
         $user = $request->user();
 
-        // بناء الاستعلام الأساسي مع العلاقات المطلوبة
         $query = Appointment::with(['patient', 'doctor', 'service', 'invoice']);
 
-        // فلترة النتائج حسب دور المستخدم الحقيقي لحماية الخصوصية
         if ($user->hasRole('patient')) {
             $query->where('patient_id', $user->id);
         } elseif ($user->hasRole('doctor')) {
             $query->where('doctor_id', $user->id);
         }
-        // الـ admin أو الأدوار الإدارية تستطيع رؤية كافة المواعيد تلقائياً
 
         $appointments = $query->latest()->paginate(15);
 
-        return AppointmentResource::collection($appointments);
+        return response()->success(
+            AppointmentResource::collection($appointments),
+            'تم جلب قائمة المواعيد بنجاح'
+        );
     }
 
-    public function store(AppointmentRequest $request)
+    /**
+     * حجز موعد طبي جديد للمريض مع التحقق من الأهلية والتداخلات الزمنية.
+     *
+     * @throws AuthorizationException
+     */
+    public function store(AppointmentRequest $request): JsonResponse
     {
         $this->authorize('create', Appointment::class);
 
@@ -54,21 +71,28 @@ class AppointmentController extends Controller
                 $request->user()->id
             );
 
-            // استخدام الـ Resource لإرجاع البيانات بشكل نظيف وموحد
-            return $this->successResponse(new AppointmentResource($appointment), 'تم حجز الموعد بنجاح', 201);
+            return response()->success(
+                new AppointmentResource($appointment),
+                'تم حجز الموعد بنجاح',
+                201
+            );
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 422);
+            return response()->error($e->getMessage(), 422);
         }
     }
 
-    public function updateStatus(Request $request, Appointment $appointment)
+    /**
+     * تحديث حالة الموعد (تأكيد، إلغاء، اكتمال) وفقاً لصلاحيات الدور.
+     *
+     * @throws AuthorizationException
+     */
+    public function updateStatus(Request $request, Appointment $appointment): JsonResponse
     {
         $this->authorize('update', $appointment);
 
         $user = $request->user();
 
-        // تحديد الحالات المسموح إرسالها بناءً على دور المستخدم
-        $allowedStatuses = ['cancelled']; // الافتراضي المسموح للمريض
+        $allowedStatuses = ['cancelled'];
 
         if ($user->hasRole('admin') || $user->hasRole('doctor')) {
             $allowedStatuses = ['confirmed', 'cancelled', 'completed'];
@@ -80,6 +104,9 @@ class AppointmentController extends Controller
 
         $updated = $this->appointmentService->updateStatus($appointment, $request->status);
 
-        return $this->successResponse(new AppointmentResource($updated), 'تم تحديث حالة الموعد بنجاح');
+        return response()->success(
+            new AppointmentResource($updated),
+            'تم تحديث حالة الموعد بنجاح'
+        );
     }
 }

@@ -18,10 +18,7 @@ class DoctorServiceController extends Controller
             ->select('id', 'first_name', 'last_name', 'email', 'specialization')
             ->get();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $doctors,
-        ]);
+        return response()->success($doctors, 'تم جلب قائمة الأطباء بنجاح');
     }
 
     /**
@@ -32,9 +29,9 @@ class DoctorServiceController extends Controller
         $doctor = User::role('doctor')->findOrFail($doctorId);
 
         $request->validate([
-            'services' => 'required|array|min:1',
-            'services.*.service_id' => 'required|exists:services,id',
-            'services.*.custom_price' => 'nullable|numeric|min:0',
+            'services' => ['required', 'array', 'min:1'],
+            'services.*.service_id' => ['required', 'exists:services,id'],
+            'services.*.custom_price' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $syncData = [];
@@ -47,11 +44,7 @@ class DoctorServiceController extends Controller
         // syncWithoutDetaching لمنع مسح الخدمات القديمة وإضافة الجديدة
         $doctor->services()->syncWithoutDetaching($syncData);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم ربط الخدمات بالطبيب بنجاح',
-            'data' => $doctor->load('services'),
-        ]);
+        return response()->success($doctor->load('services'), 'تم ربط الخدمات بالطبيب بنجاح');
     }
 
     /**
@@ -62,13 +55,10 @@ class DoctorServiceController extends Controller
         $service = Service::findOrFail($serviceId);
         $doctors = $service->doctors()->get(['users.id', 'first_name', 'last_name', 'email', 'specialization']);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'service' => $service->name,
-                'doctors' => $doctors,
-            ],
-        ]);
+        return response()->success([
+            'service' => $service->name,
+            'doctors' => $doctors,
+        ], 'تم جلب أطباء الخدمة بنجاح');
     }
 
     /**
@@ -78,15 +68,12 @@ class DoctorServiceController extends Controller
     {
         $doctor = User::role('doctor')->findOrFail($doctorId);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'doctor_id' => $doctor->id,
-                'doctor_name' => $doctor->full_name,
-                'specialization' => $doctor->specialization,
-                'services' => $doctor->services,
-            ],
-        ]);
+        return response()->success([
+            'doctor_id' => $doctor->id,
+            'doctor_name' => $doctor->full_name,
+            'specialization' => $doctor->specialization,
+            'services' => $doctor->services,
+        ], 'تم جلب خدمات الطبيب بنجاح');
     }
 
     /**
@@ -97,9 +84,6 @@ class DoctorServiceController extends Controller
         $doctor = User::role('doctor')->findOrFail($doctorId);
         $doctor->services()->detach($serviceId);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم إزالة الخدمة عن الطبيب بنجاح',
-        ]);
+        return response()->success(null, 'تم إزالة الخدمة عن الطبيب بنجاح');
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\DoctorSchedule;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,7 @@ class DoctorScheduleAndLeaveTest extends TestCase
     {
         $response = $this->actingAs($this->doctor, 'sanctum')
             ->postJson('/api/v1/doctor-schedules', [
-                'doctor_id' => $this->doctor->id, // إضافة doctor_id خارج أو داخل المصفوفة حسب الـ Validation لديك
+                'doctor_id' => $this->doctor->id,
                 'schedules' => [
                     [
                         'day_of_week' => 1,
@@ -41,7 +42,7 @@ class DoctorScheduleAndLeaveTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJson([
-                'status' => 'success',
+                'success' => true, // تم التحديث هنا
                 'message' => 'تم حفظ جدول أوقات العمل بنجاح',
             ]);
 
@@ -85,7 +86,7 @@ class DoctorScheduleAndLeaveTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJson([
-                'status' => 'success',
+                'success' => true, // تم التحديث هنا
                 'message' => 'تم تسجيل الإجازة بنجاح',
             ]);
 
@@ -111,7 +112,7 @@ class DoctorScheduleAndLeaveTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'status' => 'success',
+                'success' => true,
                 'message' => 'Doctor leave deleted successfully.',
             ]);
 
@@ -125,11 +126,13 @@ class DoctorScheduleAndLeaveTest extends TestCase
         $doctor = User::factory()->create();
         $doctor->assignRole('doctor');
 
-        // اختيار يوم غد للتأكد من اجتياز شرط after_or_equal:today
+        $service = Service::factory()->create([
+            'duration_minutes' => 30,
+        ]);
+
         $tomorrow = now()->addDay();
         $dayOfWeek = $tomorrow->dayOfWeek;
 
-        // إنشاء جدول دوام للطبيب في هذا اليوم
         DoctorSchedule::create([
             'doctor_id' => $doctor->id,
             'day_of_week' => $dayOfWeek,
@@ -138,7 +141,7 @@ class DoctorScheduleAndLeaveTest extends TestCase
             'is_working_day' => true,
         ]);
 
-        $response = $this->getJson("/api/v1/doctors/{$doctor->id}/available-slots?date=".$tomorrow->toDateString());
+        $response = $this->getJson("/api/v1/doctors/{$doctor->id}/available-slots?date=".$tomorrow->toDateString().'&service_id='.$service->id);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -156,8 +159,10 @@ class DoctorScheduleAndLeaveTest extends TestCase
         $doctor = User::factory()->create();
         $doctor->assignRole('doctor');
 
-        $response = $this->getJson("/api/v1/doctors/{$doctor->id}/available-slots");
+        $service = Service::factory()->create();
 
-        $response->assertStatus(422); // يجب أن يعود بخطأ تحقق لأن التاريخ مفقود
+        $response = $this->getJson("/api/v1/doctors/{$doctor->id}/available-slots?service_id=".$service->id);
+
+        $response->assertStatus(422);
     }
 }

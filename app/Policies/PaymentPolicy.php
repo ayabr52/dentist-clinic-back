@@ -17,14 +17,16 @@ class PaymentPolicy
             return true;
         }
 
-        // المريض يمكنه رؤية دفعاته الخاصة فقط عبر الفاتورة المرتبطة
-        if ($user->hasRole('patient')) {
-            return $payment->invoice && $payment->invoice->patient_id === $user->id;
+        // الطبيب يمكنه رؤية الدفعات المرتبطة بمواعيده أو فواتيره الخاصة فقط
+        if ($user->hasRole('doctor')) {
+            return $payment->invoice &&
+                   $payment->invoice->appointment &&
+                   $payment->invoice->appointment->doctor_id === $user->id;
         }
 
-        // الطبيب يمكنه رؤية الدفعات المرتبطة بعيادته أو فواتيره
-        if ($user->hasRole('doctor')) {
-            return true;
+        // المريض يمكنه رؤية دفعاته الخاصة فقط
+        if ($user->hasRole('patient')) {
+            return $payment->invoice && $payment->invoice->patient_id === $user->id;
         }
 
         return false;

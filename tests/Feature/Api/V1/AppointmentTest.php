@@ -53,7 +53,7 @@ class AppointmentTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'status',
+                'success', // تم التحديث من status إلى success
                 'message',
                 'data' => ['id', 'patient_id', 'status'],
             ]);
@@ -107,7 +107,7 @@ class AppointmentTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJson([
-                'status' => 'error',
+                'success' => false, // تم التحديث ليتوافق مع الـ error macro
                 'message' => 'عذراً، هذا الوقت يتداخل مع موعد حجز آخر لهذا الطبيب.',
             ]);
     }
