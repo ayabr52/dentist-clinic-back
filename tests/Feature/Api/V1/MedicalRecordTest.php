@@ -46,7 +46,7 @@ class MedicalRecordTest extends TestCase
         // 3. التحقق من النجاح وحفظه في قاعدة البيانات
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'status',
+                'success', // تم التحديث من status إلى success
                 'message',
                 'data' => ['id', 'patient_id', 'doctor_id', 'diagnosis', 'prescription'],
             ]);
@@ -75,7 +75,7 @@ class MedicalRecordTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'status',
+                'success', // تم التحديث من status إلى success
                 'message',
                 'data' => [
                     '*' => ['id', 'diagnosis', 'doctor'],

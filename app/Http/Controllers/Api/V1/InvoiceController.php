@@ -16,10 +16,7 @@ class InvoiceController extends Controller
     {
         $invoices = Invoice::with(['patient', 'appointments', 'payments'])->latest()->paginate(10);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $invoices,
-        ]);
+        return response()->success($invoices, 'تم جلب قائمة الفواتير بنجاح');
     }
 
     /**
@@ -29,9 +26,6 @@ class InvoiceController extends Controller
     {
         $invoice = Invoice::with(['patient', 'appointments', 'payments.collector'])->findOrFail($id);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $invoice,
-        ]);
+        return response()->success($invoice, 'تم جلب تفاصيل الفاتورة بنجاح');
     }
 }

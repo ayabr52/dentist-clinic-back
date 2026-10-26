@@ -8,7 +8,6 @@ use App\Http\Requests\Api\V1\UpdatePaymentStatusRequest;
 use App\Http\Resources\PaymentResource;
 use App\Models\Payment;
 use App\Services\PaymentService;
-use App\Traits\ApiResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +15,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PaymentController extends Controller
 {
-    use ApiResponse, AuthorizesRequests;
+    use AuthorizesRequests; // تم إزالة ApiResponse للاعتماد على الـ Macros العالمية
 
     protected PaymentService $paymentService;
 
@@ -63,30 +62,28 @@ class PaymentController extends Controller
 
     /**
      * Store a newly created payment in storage.
-     *
-     * @return JsonResponse
      */
-    public function store(StorePaymentRequest $request)
+    public function store(StorePaymentRequest $request): JsonResponse
     {
-        // التحقق من الصلاحية (مثلاً للأدمن فقط أو الموظف المخول)
-        // $this->authorize('create', Payment::class);
-
         $payment = $this->paymentService->createPayment($request->validated());
 
-        return $this->successResponse($payment, 'تم إنشاء عملية الدفع بنجاح', 201);
+        return response()->success(
+            new PaymentResource($payment),
+            'تم إنشاء عملية الدفع بنجاح',
+            201
+        );
     }
 
     /**
      * Display the specified payment.
      *
-     * @return JsonResponse
+     * @return PaymentResource
      */
     public function show(Payment $payment)
     {
         // تفعيل التحقق من الصلاحية أمنياً
         $this->authorize('view', $payment);
 
-        // استخدام Resource لتنظيم هيكل الـ JSON المعادة
         return new PaymentResource(
             $payment->load(['invoice.appointments', 'invoice.patient', 'collector'])
         );
@@ -94,33 +91,27 @@ class PaymentController extends Controller
 
     /**
      * Update the specified payment status.
-     *
-     * @return JsonResponse
      */
-    public function updateStatus(UpdatePaymentStatusRequest $request, Payment $payment)
+    public function updateStatus(UpdatePaymentStatusRequest $request, Payment $payment): JsonResponse
     {
-        // $this->authorize('update', $payment);
-
         $updatedPayment = $this->paymentService->updateStatus(
             $payment,
-            $request->validated()['status'],
-            $request->validated()['payment_method'] ?? null
+            $request->validated()['status']
         );
 
-        return $this->successResponse($updatedPayment, 'تم تحديث حالة الدفع بنجاح');
+        return response()->success(
+            new PaymentResource($updatedPayment),
+            'تم تحديث حالة الدفع بنجاح'
+        );
     }
 
     /**
      * Remove the specified payment from storage.
-     *
-     * @return JsonResponse
      */
-    public function destroy(Payment $payment)
+    public function destroy(Payment $payment): JsonResponse
     {
-        // $this->authorize('delete', $payment);
-
         $payment->delete(); // Soft Delete
 
-        return $this->successResponse(null, 'تم حذف السجل المالي بنجاح');
+        return response()->success(null, 'تم حذف السجل المالي بنجاح');
     }
 }

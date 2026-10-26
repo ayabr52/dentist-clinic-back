@@ -6,55 +6,60 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ServiceRequest;
 use App\Models\Service;
 use App\Services\ServiceManagementService;
+use Illuminate\Http\JsonResponse;
 
+/**
+ * @class ServiceController
+ */
 class ServiceController extends Controller
 {
     protected ServiceManagementService $serviceManager;
 
+    /**
+     * إنشاء مثيل جديد من الكونترولر وحقن خدمة إدارة الخدمات.
+     */
     public function __construct(ServiceManagementService $serviceManager)
     {
         $this->serviceManager = $serviceManager;
     }
 
-    public function index()
+    /**
+     * جلب قائمة الخدمات الطبية النشطة.
+     */
+    public function index(): JsonResponse
     {
         $services = $this->serviceManager->getAllActive();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $services,
-        ]);
+        return response()->success($services, 'تم جلب قائمة الخدمات بنجاح');
     }
 
-    public function store(ServiceRequest $request)
+    /**
+     * إنشاء خدمة طبية جديدة.
+     */
+    public function store(ServiceRequest $request): JsonResponse
     {
         $service = $this->serviceManager->createService($request->validated());
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم إنشاء الخدمة بنجاح',
-            'data' => $service,
-        ], 201);
+        return response()->success($service, 'تم إنشاء الخدمة بنجاح', 201);
     }
 
-    public function update(ServiceRequest $request, Service $service)
+    /**
+     * تحديث بيانات خدمة طبية قائمة.
+     */
+    public function update(ServiceRequest $request, Service $service): JsonResponse
     {
         $updatedService = $this->serviceManager->updateService($service, $request->validated());
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم تحديث الخدمة بنجاح',
-            'data' => $updatedService,
-        ]);
+        return response()->success($updatedService, 'تم تحديث الخدمة بنجاح');
     }
 
-    public function destroy(Service $service)
+    /**
+     * حذف خدمة طبية.
+     */
+    public function destroy(Service $service): JsonResponse
     {
         $this->serviceManager->deleteService($service);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم حذف الخدمة بنجاح',
-        ]);
+        return response()->success(null, 'تم حذف الخدمة بنجاح');
     }
 }

@@ -48,7 +48,7 @@ class ServiceTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'status',
+                'success',
                 'message',
                 'data' => ['id', 'name', 'price'],
             ]);
