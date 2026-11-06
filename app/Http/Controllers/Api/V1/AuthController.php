@@ -23,32 +23,32 @@ class AuthController extends Controller
         $result = $this->authService->register($request->validated());
 
         return response()->json([
-            'status' => 'success',
+            'success' => true,
             'message' => 'تم إنشاء الحساب بنجاح',
-            'data' => $result,
+            'data' => [
+                'user' => new UserResource($result['user']),
+                'token' => $result['token'],
+            ],
         ], 201);
     }
 
     public function login(LoginRequest $request)
     {
-        $credentials = $request->validated();
+        $result = $this->authService->login($request->validated());
 
-        if (! auth()->attempt($credentials)) {
+        if (! $result) {
             return response()->json([
                 'success' => false,
                 'message' => 'بيانات الاعتماد غير صحيحة',
             ], 401);
         }
 
-        $user = auth()->user();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
             'success' => true,
             'message' => 'تم تسجيل الدخول بنجاح',
             'data' => [
-                'user' => $user,
-                'token' => $token,
+                'user' => new UserResource($result['user']),
+                'token' => $result['token'],
             ],
         ], 200);
     }
@@ -63,7 +63,7 @@ class AuthController extends Controller
 
         // 2. إرجاعها منسقة ونظيفة عبر الـ Resource
         return response()->json([
-            'status' => 'success',
+            'success' => true,
             'data' => new UserResource($user),
         ]);
     }
@@ -73,8 +73,9 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'status' => 'success',
+            'success' => true,
             'message' => 'تم تسجيل الخروج بنجاح',
+            'data' => null,
         ]);
     }
 
@@ -88,8 +89,9 @@ class AuthController extends Controller
         $this->authService->deleteUser($user);
 
         return response()->json([
-            'status' => 'success',
+            'success' => true,
             'message' => 'تم حذف وتجميد حسابك بنجاح',
+            'data' => null,
         ]);
     }
 }
