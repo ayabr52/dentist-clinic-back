@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@539c3036780c8846c98d639b78e24c58cf3a8870 # v2.32.0
+        uses: shivammathur/setup-php@eb7c4976c70817c76a9bf697ecb0142bfae498c5 # v2.40.0
         with:
           php-version: '8.2'
           extensions: mbstring, xml, sqlite3, pdo_sqlite
