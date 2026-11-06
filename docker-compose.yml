@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # خدمة لاراول (PHP Backend)
+  laravel-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clinic_laravel
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:8000"
+    networks:
+      - clinic-network
+
+  # خدمة الذكاء الاصطناعي (FastAPI Python Service)
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: clinic_ai_service
+    restart: unless-stopped
+    volumes:
+      - ./ai-service:/app
+    ports:
+      - "8001:8001"
+    networks:
+      - clinic-network
+
+networks:
+  clinic-network:
+    driver: bridge

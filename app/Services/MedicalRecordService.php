@@ -3,16 +3,36 @@
 namespace App\Services;
 
 use App\Models\MedicalRecord;
+// استدعاء خدمة الـ AI
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class MedicalRecordService
 {
+    protected AiDiagnosticService $aiService;
+
+    // حقن خدمة الذكاء الاصطناعي عبر الـ Constructor
+    public function __construct(AiDiagnosticService $aiService)
+    {
+        $this->aiService = $aiService;
+    }
+
     public function storeRecord(array $data, int $doctorId, array $images = []): MedicalRecord
     {
         $storedFilePaths = []; // مصفوفة لتتبع المسارات في حال احتجنا لحذفها عند الفشل
 
         try {
+            // إذا تم إرفاق صور، نقوم بإرسال الصورة الأولى لخدمة الـ AI لتحليلها والحصول على النتيجة مسبقاً
+            if (! empty($images)) {
+                $primaryImage = $images[0];
+
+                // استدعاء خدمة بايثون (FastAPI) عبر الـ Service
+                $aiResult = $this->aiService->analyze($primaryImage);
+                if ($aiResult) {
+                    $data['ai_analysis_result'] = $aiResult;
+                }
+            }
+
             return DB::transaction(function () use ($data, $doctorId, $images, &$storedFilePaths) {
 
                 /** @var MedicalRecord $record */
@@ -22,13 +42,13 @@ class MedicalRecordService
                     'appointment_id' => $data['appointment_id'] ?? null,
                     'diagnosis' => $data['diagnosis'],
                     'prescription' => $data['prescription'] ?? null,
-                    'doctor_notes' => $data['doctor_notes'] ?? ($data['notes'] ?? null), // دعم كلا الاسمين لمنع ضياع الملاحظات
+                    'doctor_notes' => $data['doctor_notes'] ?? ($data['notes'] ?? null),
                     'ai_analysis_result' => $data['ai_analysis_result'] ?? null,
                 ]);
 
                 if (! empty($images)) {
                     foreach ($images as $imageFile) {
-                        // تخزين الملف على قرص خاص (local) بدلاً من public لحمايته من الوصول المباشر
+                        // تخزين الملف على قرص خاص (local) لحمايته من الوصول المباشر
                         $path = $imageFile->store('medical_records', 'local');
 
                         // نحفظ المسار لنستطيع حذفه لو حدث خطأ لاحقاً
