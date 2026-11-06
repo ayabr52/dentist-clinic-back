@@ -18,6 +18,7 @@ class UserResource extends JsonResource
             'specialization' => $this->specialization,
             'roles' => $this->getRoleNames(),            // مصفوفة بأسماء الأدوار فقط مثل ["patient"]
             'permissions' => $this->getAllPermissions()->pluck('name'), // مصفوفة بأسماء الصلاحيات المباشرة والمكتسبة من الأدوار
+            'services' => ServiceResource::collection($this->whenLoaded('services')),
         ];
     }
 }

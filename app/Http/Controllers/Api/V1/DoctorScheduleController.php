@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreDoctorScheduleRequest;
+use App\Http\Resources\DoctorScheduleResource;
 use App\Models\DoctorSchedule;
 use App\Services\DoctorScheduleService;
 use Illuminate\Http\JsonResponse;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class DoctorScheduleController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = DoctorSchedule::with('doctor:id,first_name,last_name');
 
@@ -20,10 +21,15 @@ class DoctorScheduleController extends Controller
             $query->where('doctor_id', $request->doctor_id);
         }
 
-        return response()->success($query->get(), 'تم جلب جداول الدوام بنجاح');
+        $schedules = $query->get();
+
+        return response()->success(
+            DoctorScheduleResource::collection($schedules),
+            'تم جلب جداول الدوام بنجاح'
+        );
     }
 
-    public function store(StoreDoctorScheduleRequest $request)
+    public function store(StoreDoctorScheduleRequest $request): JsonResponse
     {
         $validated = $request->validated();
         $doctorId = (int) $validated['doctor_id'];
@@ -52,16 +58,20 @@ class DoctorScheduleController extends Controller
             }
         });
 
-        return response()->success($savedSchedules, 'تم حفظ جدول أوقات العمل بنجاح', 201);
+        // تحميل علاقة الطبيب للعنصر المُعاد لضمان عمل Resource بكفاءة
+        $collection = collect($savedSchedules)->each(fn ($schedule) => $schedule->load('doctor:id,first_name,last_name'));
+
+        return response()->success(
+            DoctorScheduleResource::collection($collection),
+            'تم حفظ جدول أوقات العمل بنجاح',
+            201
+        );
     }
 
     /**
      * Remove the specified doctor schedule.
-     *
-     * @param  DoctorSchedule  $schedule  Matches the route parameter {schedule}
-     * @return JsonResponse
      */
-    public function destroy(DoctorSchedule $schedule)
+    public function destroy(DoctorSchedule $schedule): JsonResponse
     {
         $user = auth()->user();
 
@@ -78,7 +88,7 @@ class DoctorScheduleController extends Controller
     /**
      * جلب الأوقات المتاحة للطبيب في تاريخ معين بناءً على مدة الخدمة
      */
-    public function getAvailableSlots(Request $request, $doctorId, DoctorScheduleService $scheduleService)
+    public function getAvailableSlots(Request $request, $doctorId, DoctorScheduleService $scheduleService): JsonResponse
     {
         $request->validate([
             'date' => ['required', 'date', 'after_or_equal:today'],

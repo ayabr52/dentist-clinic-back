@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\MedicalRecordRequest;
+use App\Http\Resources\MedicalRecordResource;
 use App\Models\MedicalRecord;
 use App\Services\MedicalRecordService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -39,14 +40,14 @@ class MedicalRecordController extends Controller
 
         $records = $this->medicalRecordService->getPatientRecords($request->user());
 
-        return response()->success($records, 'تم جلب الملفات الطبية بنجاح');
+        return response()->success(
+            MedicalRecordResource::collection($records),
+            'تم جلب الملفات الطبية بنجاح'
+        );
     }
 
     /**
      * تخزين سجل طبي جديد مع المرفقات وصور التقارير.
-     *
-     * Validates the incoming request, checks policy authorization, and saves the record
-     * together with any uploaded images for the authenticated doctor.
      *
      * @throws AuthorizationException
      */
@@ -54,7 +55,7 @@ class MedicalRecordController extends Controller
     {
         $this->authorize('create', MedicalRecord::class);
 
-        // جلب الملفات المرفوعة إن وجدت (تكون فارغة إذا لم يرفع الطبيب صوراً)
+        // جلب الملفات المرفوعة إن وجدت
         $images = $request->file('images', []);
 
         // استدعاء السيرفس وتمرير البيانات والملفات
@@ -64,6 +65,10 @@ class MedicalRecordController extends Controller
             $images
         );
 
-        return response()->success($record, 'تم إنشاء السجل الطبي بنجاح', 201);
+        return response()->success(
+            new MedicalRecordResource($record),
+            'تم إنشاء السجل الطبي بنجاح',
+            201
+        );
     }
 }

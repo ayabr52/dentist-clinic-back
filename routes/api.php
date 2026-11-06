@@ -22,8 +22,11 @@ Route::prefix('v1')->group(function () {
     /**
      * Public Authentication Routes
      */
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    // حماية إضافية ضد هجمات القوة الغاشمة (5 محاولات لكل دقيقة)
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+    });
 
     /**
      * Public Services & Doctors Filtering Routes

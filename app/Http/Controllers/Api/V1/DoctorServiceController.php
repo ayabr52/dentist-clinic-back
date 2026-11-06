@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\Service;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DoctorServiceController extends Controller
@@ -12,19 +14,22 @@ class DoctorServiceController extends Controller
     /**
      * جلب قائمة جميع الأطباء في العيادة مع تخصصاتهم
      */
-    public function index()
+    public function index(): JsonResponse
     {
         $doctors = User::role('doctor')
             ->select('id', 'first_name', 'last_name', 'email', 'specialization')
             ->get();
 
-        return response()->success($doctors, 'تم جلب قائمة الأطباء بنجاح');
+        return response()->success(
+            UserResource::collection($doctors),
+            'تم جلب قائمة الأطباء بنجاح'
+        );
     }
 
     /**
      * ربط طبيب بخدمة واحدة أو عدة خدمات مع سعر مخصص (Custom Price)
      */
-    public function assignServices(Request $request, $doctorId)
+    public function assignServices(Request $request, $doctorId): JsonResponse
     {
         $doctor = User::role('doctor')->findOrFail($doctorId);
 
@@ -44,42 +49,43 @@ class DoctorServiceController extends Controller
         // syncWithoutDetaching لمنع مسح الخدمات القديمة وإضافة الجديدة
         $doctor->services()->syncWithoutDetaching($syncData);
 
-        return response()->success($doctor->load('services'), 'تم ربط الخدمات بالطبيب بنجاح');
+        return response()->success(
+            new UserResource($doctor->load('services')),
+            'تم ربط الخدمات بالطبيب بنجاح'
+        );
     }
 
     /**
      * جلب كافة أطباء خدمة معينة (يفيد المريض عند اختيار خدمة لمعرفة الأطباء المتاحين)
      */
-    public function getDoctorsByService($serviceId)
+    public function getDoctorsByService($serviceId): JsonResponse
     {
         $service = Service::findOrFail($serviceId);
         $doctors = $service->doctors()->get(['users.id', 'first_name', 'last_name', 'email', 'specialization']);
 
         return response()->success([
             'service' => $service->name,
-            'doctors' => $doctors,
+            'doctors' => UserResource::collection($doctors),
         ], 'تم جلب أطباء الخدمة بنجاح');
     }
 
     /**
      * جلب الخدمات التي يقدمها طبيب معين
      */
-    public function getDoctorServices($doctorId)
+    public function getDoctorServices($doctorId): JsonResponse
     {
-        $doctor = User::role('doctor')->findOrFail($doctorId);
+        $doctor = User::role('doctor')->with('services')->findOrFail($doctorId);
 
-        return response()->success([
-            'doctor_id' => $doctor->id,
-            'doctor_name' => $doctor->full_name,
-            'specialization' => $doctor->specialization,
-            'services' => $doctor->services,
-        ], 'تم جلب خدمات الطبيب بنجاح');
+        return response()->success(
+            new UserResource($doctor),
+            'تم جلب خدمات الطبيب بنجاح'
+        );
     }
 
     /**
      * إلغاء ربط خدمة معينة عن الطبيب
      */
-    public function detachService($doctorId, $serviceId)
+    public function detachService($doctorId, $serviceId): JsonResponse
     {
         $doctor = User::role('doctor')->findOrFail($doctorId);
         $doctor->services()->detach($serviceId);

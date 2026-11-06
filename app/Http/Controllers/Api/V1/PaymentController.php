@@ -11,11 +11,10 @@ use App\Services\PaymentService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PaymentController extends Controller
 {
-    use AuthorizesRequests; // تم إزالة ApiResponse للاعتماد على الـ Macros العالمية
+    use AuthorizesRequests;
 
     protected PaymentService $paymentService;
 
@@ -26,21 +25,17 @@ class PaymentController extends Controller
 
     /**
      * Display a listing of the payments.
-     *
-     * @return AnonymousResourceCollection
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user();
         $query = Payment::with(['invoice.appointments', 'invoice.patient', 'collector']);
 
-        // إذا كان المستخدم مريضاً، جلب دفعاته عبر علاقة الفاتورة حصراً
         if ($user->hasRole('patient')) {
             $query->whereHas('invoice', function ($q) use ($user) {
                 $q->where('patient_id', $user->id);
             });
         } else {
-            // للأدمن أو الطبيب: الفلترة حسب الـ patient_id عبر علاقة الفاتورة إن وجد
             if ($request->filled('patient_id')) {
                 $query->whereHas('invoice', function ($q) use ($request) {
                     $q->where('patient_id', $request->patient_id);
@@ -48,7 +43,6 @@ class PaymentController extends Controller
             }
         }
 
-        // الفلترة حسب الحالة تتم عبر علاقة الفاتورة لأنها موجودة في invoices وليس payments
         if ($request->filled('status')) {
             $query->whereHas('invoice', function ($q) use ($request) {
                 $q->where('status', $request->status);
@@ -57,7 +51,11 @@ class PaymentController extends Controller
 
         $payments = $query->latest()->paginate(10);
 
-        return PaymentResource::collection($payments);
+        // Modified: Use the unified response macro for the collection of payments
+        return response()->success(
+            PaymentResource::collection($payments),
+            'تم جلب قائمة المدفوعات بنجاح'
+        );
     }
 
     /**
@@ -76,16 +74,15 @@ class PaymentController extends Controller
 
     /**
      * Display the specified payment.
-     *
-     * @return PaymentResource
      */
-    public function show(Payment $payment)
+    public function show(Payment $payment): JsonResponse
     {
-        // تفعيل التحقق من الصلاحية أمنياً
         $this->authorize('view', $payment);
 
-        return new PaymentResource(
-            $payment->load(['invoice.appointments', 'invoice.patient', 'collector'])
+        // Modified: Use the unified response macro for a single payment resource
+        return response()->success(
+            new PaymentResource($payment->load(['invoice.appointments', 'invoice.patient', 'collector'])),
+            'تم جلب تفاصيل الدفع بنجاح'
         );
     }
 
@@ -110,7 +107,7 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment): JsonResponse
     {
-        $payment->delete(); // Soft Delete
+        $payment->delete();
 
         return response()->success(null, 'تم حذف السجل المالي بنجاح');
     }

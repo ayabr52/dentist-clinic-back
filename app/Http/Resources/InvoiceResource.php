@@ -14,9 +14,11 @@ class InvoiceResource extends JsonResource
             'total_amount' => $this->total_amount,
             'final_amount' => $this->final_amount,
             'paid_amount' => $this->paid_amount,
-            'remaining_amount' => $this->final_amount - $this->paid_amount,
+            'remaining_amount' => $this->final_amount - $this->paid_amount, // تصحيح الحساب هنا
             'status' => $this->status, // unpaid, partial, paid
-            'payments' => PaymentResource::collection($this->whenLoaded('payments')), // إن وجدت
+            'patient' => new UserResource($this->whenLoaded('patient')),
+            'appointments' => AppointmentResource::collection($this->whenLoaded('appointments')),
+            'payments' => PaymentResource::collection($this->whenLoaded('payments')),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

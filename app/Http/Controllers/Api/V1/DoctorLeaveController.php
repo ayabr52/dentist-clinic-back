@@ -4,15 +4,17 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreDoctorLeaveRequest;
+use App\Http\Resources\DoctorLeaveResource;
 use App\Models\DoctorLeave;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DoctorLeaveController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = DoctorLeave::with(['doctor' => function ($q) {
             // نأخذ بيانات المستخدم مع دور الطبيب
@@ -24,10 +26,15 @@ class DoctorLeaveController extends Controller
             $query->where('doctor_id', $request->doctor_id);
         }
 
-        return response()->success($query->get(), 'تم جلب قائمة الإجازات بنجاح');
+        $leaves = $query->get();
+
+        return response()->success(
+            DoctorLeaveResource::collection($leaves),
+            'تم جلب قائمة الإجازات بنجاح'
+        );
     }
 
-    public function store(StoreDoctorLeaveRequest $request)
+    public function store(StoreDoctorLeaveRequest $request): JsonResponse
     {
         // التحقق من صلاحية الإنشاء عبر الـ Policy
         $this->authorize('create', DoctorLeave::class);
@@ -43,13 +50,13 @@ class DoctorLeaveController extends Controller
         $leave = DoctorLeave::create($validated);
 
         return response()->success(
-            $leave->load('doctor:id,first_name,last_name,email'),
+            new DoctorLeaveResource($leave->load('doctor:id,first_name,last_name,email,specialization')),
             'تم تسجيل الإجازة بنجاح',
             201
         );
     }
 
-    public function destroy(DoctorLeave $leave)
+    public function destroy(DoctorLeave $leave): JsonResponse
     {
         // Authorize using DoctorLeavePolicy
         $this->authorize('delete', $leave);

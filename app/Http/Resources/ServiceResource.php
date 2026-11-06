@@ -14,7 +14,11 @@ class ServiceResource extends JsonResource
             'name' => $this->name ?? null,
             'description' => $this->description ?? null,
             'price' => $this->price ?? 0.00,
-            'duration_minutes' => $this->duration_minutes ?? null, // المدة بالدقائق
+            // إظهار السعر المخصص للطبيب من جدول الـ Pivot إن وجد
+            'custom_price' => $this->whenPivotLoaded('doctor_services', function () {
+                return $this->pivot->custom_price;
+            }),
+            'duration_minutes' => $this->duration_minutes ?? null,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
